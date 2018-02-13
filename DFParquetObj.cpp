@@ -402,7 +402,7 @@ int initqtok(int*const qtok , const int nk)
 	{
 		c1 = ((kx+1)*kx)/2;
 		
-		for(ky=0; ky<nk; ky++)
+		for(ky=0; ky<=kx; ky++)
 		{
 			qtok[c1+ky] = kx*nk+ky;
 		}
@@ -664,7 +664,7 @@ class DFParquetParams
 	//little helper
 	dcomp*** SigSummand;
 	
-	DFParquetParams( const int innk , const int innv , const int innvin , const int innkin )
+	DFParquetParams( const int innk , const int innv , const int innkin , const int innvin )
 	{
 		nk = innk;
 		nv = innv;

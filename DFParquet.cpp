@@ -27,6 +27,8 @@ int main(int argc, char* argv[])
 	const double relconv = atoi(argv[10]); //desired relative convergence for DF-corrections
 	const int maxit = atoi(argv[11]); //maximum number of iterative DF loops
 	
+	int i;
+	
 //  	int i,j,k,l;
 	
 	cout << "Blubb" <<  endl;
@@ -49,9 +51,16 @@ int main(int argc, char* argv[])
 	ParqObj.FlexDualToRealSig(0);
 	ParqObj.WriteSigCors();
 	
-	ParqObj.BSiter();
-	cout << "Calculating Sdual" <<  endl;
-	ParqObj.SigCalc();
+	for(i = 0; i < 5; i++)
+	{
+		ParqObj.BSiter();
+		ParqObj.Parquetiter();
+		cout << "Calculating Sdual" <<  endl;
+		ParqObj.SigCalc();
+		ParqObj.UpdateGdual();
+	}
+	
+	cout << "Writing Sdual" <<  endl;
 	ParqObj.WriteDualSig();
 	
 	ParqObj.DeleteVertexStorage();

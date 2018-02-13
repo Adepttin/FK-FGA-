@@ -6,10 +6,10 @@ U = 1.
 mu = .5
 Ef = 1.
 p1 = 0.5
-nk = 64
+nk = 8
 nkDMFT = 128
-nv = 100#128
-nvDMFT = 300#128
+nv = 10#128
+nvDMFT = 100#128
 DMFTiter = 40
 
 dumsigcor = np.zeros(( nk*nk*2*nv ) , dtype = complex)
