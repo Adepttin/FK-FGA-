@@ -6,6 +6,7 @@ using namespace std;
 #include <assert.h>
 #include <cmath>
 #include <complex>
+#include <algorithm>
 #include "routines.cpp"
 
 // Self contained DF based on DMFT results
@@ -50,7 +51,7 @@ int SetupQK(int ** const QK , const int nk)
 }
 
 int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcomp ** const Gphdown, dcomp ** const Fup, dcomp ** const Fdown , const int nk , const int nv)
-{
+{	
 	const int nnk = nk*nk;
 	const int nnv = 2*nv + 1;
 	int i,j,k,l,m;
@@ -74,7 +75,7 @@ int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcom
 			for(k=-nv; k<nv; k++)
 			{
 				for(l=-nv; l<nv; l++)
-				{
+				{					
 					cv = k*2*nv + l;
 					Pphdown[cv] -= (Fdown[c1][cv] * Gphdown[c1*nnk][cv]);
 					
@@ -119,6 +120,7 @@ int qBSph(dcomp ** const Pphup, dcomp ** const Pphdown, dcomp ** const Gphup, dc
 			{
 				for(l=0; l<nk;  l++)
 				{
+					
 					c2 = k*nk + l;
 					kBSph( Pphup[c1*nnk+c2], Pphdown[c1*nnk+c2], (Gphup+c2), (Gphdown+c2), (Fup+c1*nnk), (Fdown+c1*nnk), nk , nv);
 				}
@@ -130,7 +132,7 @@ int qBSph(dcomp ** const Pphup, dcomp ** const Pphdown, dcomp ** const Gphup, dc
 }
 
 int BSph(dcomp *** const Pphup, dcomp *** const Pphdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown , const int nk , const int nv)
-{
+{	
 	const int ndistk = (nk/2 + 1)*(nk/2)/2;
 	int i;
 	
@@ -144,7 +146,7 @@ int BSph(dcomp *** const Pphup, dcomp *** const Pphdown, dcomp *** const Gphup, 
 
 
 int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Fup, dcomp *** const Fdown , const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
-{
+{	
 	const int ndistk = (nk/2 + 1)*(nk/2)/2;
 	const int nnk = nk*nk;
 	
@@ -154,7 +156,7 @@ int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, 
 	int dumk1, dumk2;
 	
 	for(i = 0; i < ndistk; i++) //q
-	{
+	{		
 		kq = qtok[i];
 		for(j = 0; j < nnk; j++)  //k
 		{
@@ -576,6 +578,43 @@ int CalcSigmaDual(dcomp* const Sigmadual, dcomp*** const SigSummand, dcomp * con
 	return(0);
 }
 
+//calculate the Hartree Fock term for the self energy
+int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const Flocup, dcomp * const Flocdown, dcomp * const Sigmadualhf, const int nk, const int nv)
+{
+	const int nnk = nk*nk;	
+	int i, j, k;
+	
+	for(i=-nv; i<nv; i++)
+	{
+		Gdualloc[i] = 0.;
+		Sigmadualhf[i] = 0.;
+	}
+	
+	//calculate local Gdual
+	for(k=0; k<nnk; k++)
+	{
+		for(i=-nv; i<nv; i++)
+		{
+			Gdualloc[i] += Gdual[2 * nv*k + i];
+			//normalisation
+			Gdualloc[i] /= nnk;
+		}
+	}
+	
+	//calculate Hartree Fock self energy
+	for(i=-nv; i<nv; i++)
+	{
+		for(j=-nv; j<nv; j++)
+		{
+			Sigmadualhf[i] += Flocup[2 * i*nv + j] * Gdualloc[j];
+		}
+		
+		Sigmadualhf[i] -= Flocdown[2 * i*nv + i] * Gdualloc[i];
+	}
+		
+	return(0);	
+}
+
 class DFParquetParams
 {
 	public:
@@ -587,9 +626,11 @@ class DFParquetParams
 	dcomp* Sigmadual;
 	dcomp* Sigmadualold;
 	dcomp* Sigmacor;
+	dcomp* Sigmadualhf;
 	dcomp* G0dual; 
 	dcomp* Gdual; 
-	dcomp* Gloc; 
+	dcomp* Gloc;
+	dcomp* Gdualloc;
 	
 	//k-grid quantities
 	int ** ksum;
@@ -652,8 +693,14 @@ class DFParquetParams
 		Sigmacor = new dcomp [2*nv*nnk]; 
 		Sigmacor += nv;
 		
+		Sigmadualhf = new dcomp [2*nv];
+		Sigmadualhf += nv;
+		
 		Gloc = new dcomp [2*nv]; 
 		Gloc += nv;
+		
+		Gdualloc = new dcomp [2*nv]; 
+		Gdualloc += nv;
 		
 		return(0);
 	}
@@ -675,8 +722,14 @@ class DFParquetParams
 		Sigmacor -= nv;
 		delete Sigmacor;
 		
+		Sigmadualhf -= nv;
+		delete Sigmadualhf;
+		
 		Gloc -= nv;
 		delete Gloc;
+		
+		Gdualloc -= nv;
+		delete Gdualloc;
 		
 		return(0);
 	}
@@ -749,7 +802,6 @@ class DFParquetParams
 		
 		Fup = new dcomp **[ndistk];
 		Fdown = new dcomp **[ndistk];
-		
 		
 		Gphup = new dcomp **[ndistk];
 		Gphdown = new dcomp **[ndistk];
@@ -1129,7 +1181,7 @@ class DFParquetParams
 	}
 	
 	int BSiter()
-	{
+	{		
 		int retval = 0;
 		
 		retval += BSph( Pphup, Pphdown, Gphup, Gphdown, Fup, Fdown , nk , nv);
@@ -1167,6 +1219,8 @@ class DFParquetParams
 	int SigCalc()
 	{
 		
+		int i,k;
+		
 		InitSigSummand(SigSummand, Fup, Flocup, Gdual, nk , nv, qtok, ksum);
 		
 		dcomp* dummy;
@@ -1176,6 +1230,21 @@ class DFParquetParams
 		Sigmadual = dummy;
 		
 		CalcSigmaDual(Sigmadual, SigSummand, Gdual, nk , nv, ktoq, ksym, kmap, ksum);
+		
+		//add Hartree-Fock term
+		CalcSigmaDualHF(Gdual, Gdualloc, Flocup, Flocdown, Sigmadualhf, nk, nv);
+		
+		writebin("Sigmadualhf", Sigmadualhf-nv, 2*nv);
+		
+		writebin("Gdualloc", Gdualloc-nv, 2*nv);
+			
+		for(k=0; k<nnk; k++)
+		{
+			for(i=-nv; i<nv; i++)
+			{
+				Sigmadual[2*nv*k+i]=Sigmadualhf[i]+Sigmadual[2*nv*k+i];
+			}
+		}
 		
 		return(0);
 	}
