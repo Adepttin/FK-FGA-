@@ -46,26 +46,34 @@ int main(int argc, char* argv[])
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
 	
+// 	ParqObj.SigCalc();
+// 	ParqObj.UpdateGdual();
+// 	ParqObj.ResetVertex();
+	
 	cout << "Calculating Sdual" <<  endl;
 	ParqObj.SigCalc();
+	ParqObj.WriteGdual();
 	ParqObj.FlexDualToRealSig(0);
-	ParqObj.WriteSigCors();
+	ParqObj.WriteDualSig();
 	
-	for(i = 0; i < 5; i++)
+	for(i = 0; i < maxit; i++)
 	{
 		ParqObj.BSiter();
 		ParqObj.Parquetiter();
 		cout << "Calculating Sdual" <<  endl;
 		ParqObj.SigCalc();
-		ParqObj.UpdateGdual();
+// 		ParqObj.UpdateGdual();
 	}
 	
 	cout << "Writing Sdual" <<  endl;
-	ParqObj.WriteDualSig();
+	ParqObj.WriteSigCors();
 	
-	ParqObj.DeleteVertexStorage();
+	cout << "Deleting Khelper" <<  endl;
 	ParqObj.DeleteKQuantities();
+	cout << "Writing 1P quantities" <<  endl;
 	ParqObj.DeleteOneParticle();
+	cout << "Deleting Vertices" <<  endl;
+	ParqObj.DeleteVertexStorage();
 	
 	ofstream outfile;
 	//Output-scope

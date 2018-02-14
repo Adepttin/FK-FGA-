@@ -581,7 +581,8 @@ int CalcSigmaDual(dcomp* const Sigmadual, dcomp*** const SigSummand, dcomp * con
 //calculate the Hartree Fock term for the self energy
 int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const Flocup, dcomp * const Flocdown, dcomp * const Sigmadualhf, const int nk, const int nv)
 {
-	const int nnk = nk*nk;	
+	const int nnk = nk*nk;
+	const double norm = nnk;    
 	int i, j, k;
 	
 	for(i=-nv; i<nv; i++)
@@ -595,9 +596,7 @@ int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const F
 	{
 		for(i=-nv; i<nv; i++)
 		{
-			Gdualloc[i] += Gdual[2 * nv*k + i];
-			//normalisation
-			Gdualloc[i] /= nnk;
+			Gdualloc[i] += Gdual[2 * nv*k + i]/norm;
 		}
 	}
 	
@@ -609,7 +608,7 @@ int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const F
 			Sigmadualhf[i] += Flocup[2 * i*nv + j] * Gdualloc[j];
 		}
 		
-		Sigmadualhf[i] -= Flocdown[2 * i*nv + i] * Gdualloc[i];
+		Sigmadualhf[i] -= Flocup[2 * i*nv + i] * Gdualloc[i];
 	}
 		
 	return(0);	
@@ -1008,6 +1007,14 @@ class DFParquetParams
 		
 		readbin ("G0dual" , G0dual-nv , 2*nv*nnk );
 		
+		for(i=0; i<nnk;  i++)
+		{
+			for(j=-nv; j<nv; j++)
+			{
+				Gdual[i*2*nv + j] = G0dual[i*2*nv + j];
+			}
+		}
+		
 		return(0);
 	}
 	
@@ -1019,20 +1026,11 @@ class DFParquetParams
 		{
 			for(j=0; j<nnk*nnk; j++)
 			{
-				for(k=-nv*(2*nv + 1); k<nv*(2*nv + 1); k++)
+				for(k=-nv*(2*nv + 1); k<(nv-1)*(2*nv + 1)+1; k++)
 				{
-					
-					Fup[i][j][k] = Flocup[k];
-					Fdown[i][j][k] = Flocdown[k];
-					
-					Gphup[i][j][k] = Flocup[k];
-					Gphdown[i][j][k] = Flocdown[k];
 					
 					Pphup[i][j][k] = 0.;
 					Pphdown[i][j][k] = 0.;
-					
-					Gppup[i][j][k] = Flocup[k];
-					Gppdown[i][j][k] = Flocdown[k];
 					
 					Pppup[i][j][k] = 0.;
 					Pppdown[i][j][k] = 0.;
@@ -1040,6 +1038,8 @@ class DFParquetParams
 				}
 			}
 		}
+		
+		this->Parquetiter();
 		
 		return(0);
 	}
@@ -1178,6 +1178,11 @@ class DFParquetParams
 	void WriteDualSig()
 	{
 		writebin ("DualSig" , Sigmadual-nv , 2*nv*nnk );
+	}
+	
+	void WriteGdual()
+	{
+		writebin ("Gdual" , Gdual-nv , 2*nv*nnk );
 	}
 	
 	int BSiter()
