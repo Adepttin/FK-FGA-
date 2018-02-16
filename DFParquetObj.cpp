@@ -21,7 +21,7 @@ inline int RC( const int k1 , const int k2)
 int SetupQK(int ** const QK , const int nk)
 {
 // 	const int nnk = nk*nk;
-// 	const int ndistk = (nk/2 + 1)*(nk/2)/2;
+// 	const int ndistk = (nk/2 + 1)*(nk/2+2)/2;
 	
 	int i,j,k,l;
 	int ca, cb;
@@ -133,7 +133,7 @@ int qBSph(dcomp ** const Pphup, dcomp ** const Pphdown, dcomp ** const Gphup, dc
 
 int BSph(dcomp *** const Pphup, dcomp *** const Pphdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown , const int nk , const int nv)
 {	
-	const int ndistk = (nk/2 + 1)*(nk/2)/2;
+	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
 	int i;
 	
 	for(i=0; i<ndistk;  i++)
@@ -147,7 +147,7 @@ int BSph(dcomp *** const Pphup, dcomp *** const Pphdown, dcomp *** const Gphup, 
 
 int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Fup, dcomp *** const Fdown , const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
 {	
-	const int ndistk = (nk/2 + 1)*(nk/2)/2;
+	const int ndistk = (nk/2 + 1)*(nk/2+2)/2;
 	const int nnk = nk*nk;
 	
 	int i,j,k,l,m,n;
@@ -306,7 +306,7 @@ int initksym(int*const ksym , const int nk)
 	
 	for(kx=1; kx <= nk/2; kx++)
 	{
-		for(ky=1; ky < kx; ky++)
+		for(ky=0; ky < kx; ky++)
 		{
 			ksym[ky*nk+kx] = 1;
 		}
@@ -413,7 +413,7 @@ int initqtok(int*const qtok , const int nk)
 
 int ParquetReassembly(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown, dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Pphup, dcomp *** const Pphdown, dcomp * const Lambdaup, dcomp * const Lambdadown, dcomp * const Gk, const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
 {
-	const int ndistk = (nk/2 + 1)*(nk/2)/2;
+	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
 	const int nnk = nk*nk;
 	
 	int i,j,k,l,m;
@@ -466,7 +466,7 @@ int ParquetReassembly(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** 
 
 int InitSigSummand(dcomp*** const SigSummand, dcomp *** const Fup, dcomp * const Lambdaup, dcomp * const Gk, const int nk , const int nv, const int* const qtok, const int* const * const ksum)
 {
-	const int ndistk = (nk/2 + 1)*(nk/2)/2;
+	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
 	const int nnk = nk*nk;
 	int i,j,k,l,m;
 	int qeff;
@@ -1227,6 +1227,30 @@ class DFParquetParams
 		int i,k;
 		
 		InitSigSummand(SigSummand, Fup, Flocup, Gdual, nk , nv, qtok, ksum);
+		
+// 		{
+// 			dcomp* dummya = new dcomp[ndistk*nnk*nv];
+// 			int j;
+// 			
+// 			for(k=0; k<ndistk; k++)
+// 			{
+// 				for(i=0; i<nnk; i++)
+// 				{
+// 					for(j=0; j<nv; j++)
+// 					{
+// 						dummya[(k * nnk + i)*nv + j]=SigSummand[k][i][j];
+// 					}
+// 				}
+// 			}
+// 			
+// 			writebin("Sigsummand", dummya, ndistk*nnk*nv);
+// 			
+// 			delete (dummya);
+// 			
+// 		}
+		
+		
+		
 		
 		dcomp* dummy;
 		
