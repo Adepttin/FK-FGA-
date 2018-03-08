@@ -1175,6 +1175,13 @@ class DFParquetParams
 		writebin ("SigmaCork" , Sigmacor-nv , 2*nv*nnk );
 	}
 	
+	int ReadDualSig()
+	{
+		readbin("DualSig", Sigmadual-nv, 2*nv*nnk);
+		
+		return(0);
+	}
+	
 	void WriteDualSig()
 	{
 		writebin ("DualSig" , Sigmadual-nv , 2*nv*nnk );
