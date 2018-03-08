@@ -1233,32 +1233,7 @@ class DFParquetParams
 		
 		int i,k;
 		
-		InitSigSummand(SigSummand, Fup, Flocup, Gdual, nk , nv, qtok, ksum);
-		
-// 		{
-// 			dcomp* dummya = new dcomp[ndistk*nnk*nv];
-// 			int j;
-// 			
-// 			for(k=0; k<ndistk; k++)
-// 			{
-// 				for(i=0; i<nnk; i++)
-// 				{
-// 					for(j=0; j<nv; j++)
-// 					{
-// 						dummya[(k * nnk + i)*nv + j]=SigSummand[k][i][j];
-// 					}
-// 				}
-// 			}
-// 			
-// 			writebin("Sigsummand", dummya, ndistk*nnk*nv);
-// 			
-// 			delete (dummya);
-// 			
-// 		}
-		
-		
-		
-		
+		InitSigSummand(SigSummand, Fup, Flocup, Gdual, nk , nv, qtok, ksum);	
 		dcomp* dummy;
 		
 		dummy = Sigmadualold;
