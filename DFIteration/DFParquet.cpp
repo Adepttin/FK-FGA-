@@ -29,8 +29,6 @@ int main(int argc, char* argv[])
 	
 	int i;
 	
-//  	int i,j,k,l;
-	
 	cout << "Blubb" <<  endl;
 	DFParquetParams ParqObj = DFParquetParams (nk , nv , nkin , nvin);
 	
@@ -46,36 +44,25 @@ int main(int argc, char* argv[])
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
 	
-// 	ParqObj.SigCalc();
-// 	ParqObj.UpdateGdual();
-// 	ParqObj.ResetVertex();
-	
-//reading Sigmadual and updating Gdual
+	//reading DualSig and updating Gdual
 	ParqObj.ReadDualSig();
 	ParqObj.UpdateGdual();
-	
-//	cout << "Calculating Sdual" <<  endl;
-//	ParqObj.SigCalc();
-//	ParqObj.WriteGdual();
-//	ParqObj.FlexDualToRealSig(0);
-//	ParqObj.WriteDualSig();
-		
+
+	//do BS and Parquet iteration maxit times
 	for(i = 0; i < maxit; i++)
 	{
 		cout << "BS Iteration " << i << "/" << maxit << endl;
 		ParqObj.BSiter();
 		cout << "Parquet" << endl;
 		ParqObj.Parquetiter();
-
-//		cout << "Calculating Sdual" <<  endl;
-//		ParqObj.SigCalc();
-//		ParqObj.UpdateGdual();
 	}
 	
+	//calculate corresponding DualSig and update Gdual
 	cout << "Calculating Sdual" <<  endl;
 	ParqObj.SigCalc();
 	ParqObj.UpdateGdual();
 	
+	//write output quantities
 	cout << "Writing Sdual" <<  endl;
 	ParqObj.FlexDualToRealSig(0);
 	ParqObj.WriteSigCors();

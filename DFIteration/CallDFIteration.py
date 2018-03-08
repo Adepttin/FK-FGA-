@@ -3,7 +3,9 @@ import numpy as np
 from shutil import copyfile
 
 '''
-asdjfklsjdf
+Calls SCDMFT.out to calculate the DMFT quantities and, starting with 0 as dual self energy Sigma,
+calls DFParquet.out to calculate the DF quantities iteratively. In each step, DualSig and
+Gdual are copied to the directories ./SigmaDual and ./GDual.
 '''
 
 beta = 12.5
