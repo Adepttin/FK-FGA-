@@ -236,12 +236,16 @@ int main(int argc, char* argv[])
 	
 	dcomp* SuperG = new dcomp [2 * nv]; 
 	SuperG = SuperG + nv;
+	dcomp* SuperSigma = new dcomp [2 * nv]; 
+	SuperSigma = SuperSigma + nv;
 	
 	for (i = 0; i < nv; i++){
 		SuperG[i] = MatsuGloc[i];
+		SuperSigma[i] = MatsuSigma[i];
 	}
 	for (i = 0; i < nv; i++){
 		SuperG[-i-1] = conj(SuperG[i]);
+		SuperSigma[-i-1] = conj(SuperSigma[i]);
 	}
 	
 	//Prepare bare dual propagator
@@ -293,14 +297,17 @@ int main(int argc, char* argv[])
 	delete Gdual;
 	
 	SuperG = SuperG - nv;
+	SuperSigma = SuperG - nv;
 	
 	writebin ("G1" , SuperG , 2*nv );
+	writebin ("Sigma" , SuperSigma , 2*nv );
 	
 	
 	SigmaCorIn -= nvin; // reset natural position of Sigma correction input.
  	delete SigmaCorIn;
 
 	delete SuperG;
+	delete SuperSigma;
 	delete MatsuSigma;
 	delete MatsuDelta;
 	delete MatsuGloc;
