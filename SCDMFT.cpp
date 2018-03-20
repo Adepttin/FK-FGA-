@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
 	delete Gdual;
 	
 	SuperG = SuperG - nv;
-	SuperSigma = SuperG - nv;
+	SuperSigma = SuperSigma - nv;
 	
 	writebin ("G1" , SuperG , 2*nv );
 	writebin ("Sigma" , SuperSigma , 2*nv );
