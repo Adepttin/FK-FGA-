@@ -1,6 +1,6 @@
 import numpy as np
 
-#Functions for calculating the second order contribution to dual self energy
+#Functions
 
 def setUpExponent(nk):
 #creates the coefficients exp(ikx) in the matrix exponent(nk,nk)
@@ -34,7 +34,7 @@ def readFloc(nv):
     F = F[(s/2-nv):(s/2+nv),(s/2-nv):(s/2+nv)]
     return F
 
-def fourierTransform(space, momentum, nk, nv, exponent):
+def fourierTransform(space, momentum, nk, nv, exponent, back = False):
 #Fourier Transformation of the matrix momentum(nk,nk,nv) to the matrix space
 #using the exponential values of exponent(nk,nk)
 
@@ -49,7 +49,8 @@ def fourierTransform(space, momentum, nk, nv, exponent):
                         dsum += momentum[kx][ky][v]*exponent[x][kx]*exponent[y][ky]
                 
                 #normalisation
-                dsum = dsum/float(nk*nk)
+                if not back:
+                    dsum = dsum/float(nk*nk)
                 space[x][y][v]=dsum
 				
 def calculateSigma(Sigma, F, Gx, Gx_neg, nk, nv, beta):
@@ -72,6 +73,5 @@ def calculateSigma(Sigma, F, Gx, Gx_neg, nk, nv, beta):
                 
                 #normalisation
                 Sigmasum = Sigmasum/beta
-                #Sigmasum = Sigmasum/float(nk*nk)
                 Sigma[x][y][v] = Sigmasum
 				

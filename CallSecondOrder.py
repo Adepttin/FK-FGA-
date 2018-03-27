@@ -4,38 +4,50 @@ import cmath as cm
 import subprocess
 from SecondOrderFunctions import *
 
-"""
-Calculates the second order contribution of the dual self energy.
-Calls SDMFT.out.
-"""
+#Paramters
+#nk=16
+nkList=[4,8,16,32,64]
+nv=20
+beta=12.5
 
-#Parameter
-beta = 12.5 #20
+#DMFT Parameters
+nk = 6
 U = 1 #1.
 mu = 0.5 #.5
 Ef = 1. #1.
 p1 = 0.5 #0.5
-nk = 16
 nkDMFT = 128
-nv = 20#128
 nvDMFT = 100#128
 DMFTiter = 40
+
+#for nk in nkList:
+print("---------------------------")
+print("Lattice: " + str(nk) + "x" + str(nk))
+print("---------------------------")
 
 #initialize Sigma Corrections to zero
 dumsigcor = np.zeros(( nk*nk*2*nv ) , dtype = complex)
 dumsigcor.tofile("SigmaCork")
 
 #call DMFT
-print("Call DMFT")
 subprocess.call( ["./SCDMFT.out" , str (beta) , str (U) , str (mu) , str (Ef) , str(p1) , str (nkDMFT) , str (nk) , str (nvDMFT) , str (nv) , str(DMFTiter)] )
 
-#set up exponential coefficients
+#exponential coefficients
 exponent, exponent_neg = setUpExponent(nk)
 
-#read in Floc and G0dual
-print("Read in Floc and G0dual")
+#reading in Floc and G0dual
+print("Reading in Floc and G0dual")
+
 F = readFloc(nv)
+#print(len(F))
+#plt.imshow(F.real, cmap='hot', interpolation='nearest')
+#plt.colorbar()
+#plt.show()
+
 Gdual = readGdual(nk,nv)
+#plt.imshow(Gdual[:,:,10].real, cmap='hot', interpolation='nearest')
+#plt.colorbar()
+#plt.show()
 
 #Fourier Transformation of Gdual
 print("Fourier Transform G0dual")
@@ -56,8 +68,8 @@ calculateSigma(Sigmax, F, Gx, Gx_neg, nk, nv, beta)
 #Fourier Transformation of Sigma back to momentum space
 print("Fourier Transformation back")
 Sigmak = np.zeros((nk,nk,2*nv), dtype = complex)
-fourierTransform(Sigmak, Sigmax, nk, nv, exponent_neg)
+fourierTransform(Sigmak, Sigmax, nk, nv, exponent_neg, back = True)
 
-#write to "SecondSigma"
-Sigmak.tofile("SecondSigma")
+#write to "DualSigma"
+Sigmak.tofile("SecondSigma" + str(nk))
 
