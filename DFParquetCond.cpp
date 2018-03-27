@@ -51,20 +51,27 @@ int main(int argc, char* argv[])
 // 	ParqObj.UpdateGdual();
 // 	ParqObj.ResetVertex();
 	
-	cout << "Calculating Sdual" <<  endl;
-	ParqObj.SigCalc();
-	ParqObj.WriteGdual();
-	ParqObj.FlexDualToRealSig(0);
-	ParqObj.WriteDualSig();
+//reading Sigmadual and updating Gdual
+	ParqObj.ReadDualSig();
+	ParqObj.UpdateGdual();
+	
+//	cout << "Calculating Sdual" <<  endl;
+//	ParqObj.SigCalc();
+//	ParqObj.WriteGdual();
+//	ParqObj.FlexDualToRealSig(0);
+//	ParqObj.WriteDualSig();
 	
 	for(i = 0; i < maxit; i++)
 	{
+		cout << "BS Iteration " << i << "/" << maxit << endl;
 		ParqObj.BSiter();
+		cout << "Parquet" << endl;
 		ParqObj.Parquetiter();
-		cout << "Calculating Sdual" <<  endl;
-		ParqObj.SigCalc();
-		ParqObj.UpdateGdual();
 	}
+	
+	cout << "Calculating Sdual" <<  endl;
+	ParqObj.SigCalc();
+	ParqObj.UpdateGdual();
 	
 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
 	CondObj.InitialiseStorage();
@@ -78,7 +85,10 @@ int main(int argc, char* argv[])
 	CondObj.DeleteStorage();
 	
 	cout << "Writing Sdual" <<  endl;
+	ParqObj.FlexDualToRealSig(0);
 	ParqObj.WriteSigCors();
+	ParqObj.WriteDualSig();
+	ParqObj.WriteGdual();
 	
 	cout << "Deleting Khelper" <<  endl;
 	ParqObj.DeleteKQuantities();
