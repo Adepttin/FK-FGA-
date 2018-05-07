@@ -463,6 +463,112 @@ int ParquetReassembly(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** 
 	return(0);
 }
 
+//calculates only contributions from the ph channel
+int ParquetReassemblyph(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown, dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Pphup, dcomp *** const Pphdown, dcomp * const Lambdaup, dcomp * const Lambdadown, dcomp * const Gk, const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
+{
+	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
+	const int nnk = nk*nk;
+	
+	int i,j,k,l,m;
+	int q1,k1;
+	int s1;
+	int dumk1, dumk2;
+	
+	for(i=0;i<ndistk;i++) //q
+	{
+		for(j=0;j<nnk;j++) //k
+		{
+			k1 = ksum[qtok[i]][j];
+			
+			for(k=0;k<nnk;k++) //k'
+			{
+				dumk1 = (kdif[k][j]);
+				q1 = ktoq[dumk1];
+				s1 = ksym[dumk1];
+				
+				dumk1 = j*nnk+k;
+				dumk2 = (kmap[s1][j])*nnk+kmap[s1][k1];
+				
+				for(l=-nv;l<nv;l++) //v
+				{
+					for(m=-nv;m<nv;m++) //v'
+					{
+						Fup[i][dumk1][l*2*nv+m] = Lambdaup[l*2*nv+m] + Pphup[i][dumk1][l*2*nv+m];
+						
+						Fdown[i][dumk1][l*2*nv+m] = Lambdadown[l*2*nv+m] + Pphdown[i][dumk1][l*2*nv+m];
+						
+						
+						//Gppup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pppup[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + m])*(Gk[k1*2*nv + l]);
+						
+						//Gppdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pppdown[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + l])*(Gk[k1*2*nv + m]);
+						
+						
+						Gphup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pphup[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + m])*(Gk[k1*2*nv + m]);
+						
+						Gphdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pphdown[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + l])*(Gk[k1*2*nv + m]);
+						
+					}
+				}
+			}
+		}
+	}
+	
+	return(0);
+}
+
+//calculates only contributions from the pp channel
+int ParquetReassemblypp(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown, dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Pphup, dcomp *** const Pphdown, dcomp * const Lambdaup, dcomp * const Lambdadown, dcomp * const Gk, const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
+{
+	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
+	const int nnk = nk*nk;
+	
+	int i,j,k,l,m;
+	int q1,k1;
+	int s1;
+	int dumk1, dumk2;
+	
+	for(i=0;i<ndistk;i++) //q
+	{
+		for(j=0;j<nnk;j++) //k
+		{
+			k1 = ksum[qtok[i]][j];
+			
+			for(k=0;k<nnk;k++) //k'
+			{
+				dumk1 = (kdif[k][j]);
+				q1 = ktoq[dumk1];
+				s1 = ksym[dumk1];
+				
+				dumk1 = j*nnk+k;
+				dumk2 = (kmap[s1][j])*nnk+kmap[s1][k1];
+				
+				for(l=-nv;l<nv;l++) //v
+				{
+					for(m=-nv;m<nv;m++) //v'
+					{
+						Fup[i][dumk1][l*2*nv+m] = Lambdaup[l*2*nv+m] + Pppup[i][dumk1][l*2*nv+m];
+						
+						Fdown[i][dumk1][l*2*nv+m] = Lambdadown[l*2*nv+m] + Pppdown[i][dumk1][l*2*nv+m];
+						
+						
+						Gppup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pppup[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + m])*(Gk[k1*2*nv + l]);
+						
+						Gppdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pppdown[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + l])*(Gk[k1*2*nv + m]);
+						
+						
+						//Gphup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pphup[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + m])*(Gk[k1*2*nv + m]);
+						
+						//Gphdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pphdown[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + l])*(Gk[k1*2*nv + m]);
+						
+					}
+				}
+			}
+		}
+	}
+	
+	return(0);
+}
+
 
 int InitSigSummand(dcomp*** const SigSummand, dcomp *** const Fup, dcomp * const Lambdaup, dcomp * const Gk, const int nk , const int nv, const int* const qtok, const int* const * const ksum)
 {
@@ -1228,6 +1334,20 @@ class DFParquetParams
 		return(0);
 	}
 	
+	int Parquetiterph()
+	{
+		
+		ParquetReassemblyph(Gppup, Gppdown, Gphup, Gphdown, Fup, Fdown, Pppup, Pppdown, Pphup, Pphdown, Flocup, Flocdown, Gdual, nk , nv, ktoq, ksym, qtok, kmap, ksum, kdif);
+		return(0);
+	}
+	
+	int Parquetiterpp()
+	{
+		
+		ParquetReassemblypp(Gppup, Gppdown, Gphup, Gphdown, Fup, Fdown, Pppup, Pppdown, Pphup, Pphdown, Flocup, Flocdown, Gdual, nk , nv, ktoq, ksym, qtok, kmap, ksum, kdif);
+		return(0);
+	}
+	
 	int SigCalc()
 	{
 		
@@ -1258,5 +1378,25 @@ class DFParquetParams
 		}
 		
 		return(0);
+	}
+	
+	//for ladder calculations in channel cha, 0 is ph, 1 is pp
+	int ParquetAndSigCalc(int cha)
+	{
+		//call Parquetiter with both ph and pp contributions to get right Sigma
+		Parquetiter();
+		SigCalc();
+		
+		//call Parquetiterph/pp to calculate actual vertex
+		if (cha == 0)
+		{
+			Parquetiterph();
+		}
+		else if (cha == 1)
+		{
+			Parquetiterpp();
+		}
+		
+		return(0);	
 	}
 };
