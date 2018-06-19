@@ -15,7 +15,7 @@ p1 = 0.5
 nk = 6
 nkDMFT = 128
 nv = 20#128
-nvDMFT = 200#128
+nvDMFT = 100#128
 DMFTiter = 40
 relconv = 0.5
 DFiter = 5
@@ -23,14 +23,14 @@ DFiter = 5
 iteration = 5 #iteration steps
 
 #temperatures for which to calculate
-temperatures = [0.1, 0.08, 0.06, 0.04]
+temperatures = [0.1, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04]
 betas = [1/t for t in temperatures]
 
 #for file handling
-betaNames = [10,12,16,25]
+betaNames = [10,11,12,14,16,20,25]
 
 #corresponding chemical potentials
-mus = [-0.42327881, -0.41952515, -0.41888428, -0.42337036]
+mus = [-0.42327881, -0.42108154, -0.41952515, -0.41874695, -0.41888428, -0.42021179, -0.42337036]
 
 typeList = ["Parquet", "LadderPH", "LadderPP"]
 
@@ -41,8 +41,8 @@ occs.write("T\t\t\tmu\t\t\t\tn_DMFT\t\tn_Parquet\tn_ph\t\tnpp\n")
 for i in range(0,len(temperatures)):
 	
 	#read in DMFT G and Sigma for current beta
-	pathG1 = "./DMFT/beta" + str(betaNames[i]) + "/G1"
-	pathSigma = "./DMFT/beta" + str(betaNames[i]) + "/Sigma"
+	pathG1 = "./U05/DMFT/beta" + str(betaNames[i]) + "/G1"
+	pathSigma = "./U05/DMFT/beta" + str(betaNames[i]) + "/Sigma"
 	
 	#calculate occupation for DMFT
 	G1 = np.fromfile(pathG1, dtype=complex)
@@ -54,7 +54,9 @@ for i in range(0,len(temperatures)):
 	for modus in typeList:
 		
 		#read in Sigma Corrections (Dual Sigma)
-		pathSigmaCork = "./" + modus + "/beta" + str(betaNames[i]) + "/DF4/SigmaDual/DualSig" + str(iteration-1)
+		pathSigmaCork = "./U05/" + modus + "/beta" + str(betaNames[i]) + "/DF4/SigmaDual/DualSig" + str(iteration-1)
+		
+		calcGCor(pathG1, pathSigma, pathSigmaCork, nk, nv, nvDMFT, beta, mu)
 
 		#read in resulting corrected local G (DMFT + DF)
 		GlocNew = np.fromfile("GlocNew", dtype = complex)
