@@ -41,8 +41,8 @@ def findMu(mu_a,mu_b,n,error,beta,U,Ef,p1,nkDMFT,nk,nvDMFT,nv,DMFTiter):
 		else:
 			b = mu
 			
-		#print("T = " + str(1/beta))
-		#print(mu, sigma)
+		print("T = " + str(1/beta))
+		print(mu, sigma)
 			
 		if ((sigma - sigmaWanted) < error) and ((sigma - sigmaWanted) > -error):
 			print("-------------------------")
@@ -97,7 +97,7 @@ def calcGCor(pathG1, pathSigma, pathSigmaCork, nk, nv, nvDMFT, beta, mu):
 		Gsum = 0
 		for kx in range(0,nk):
 			for ky in range(0,nk):
-				Gsum += Gnew[ky][ky][v]
+				Gsum += Gnew[kx][ky][v]
 		GlocNew[v] = Gsum/float(nk*nk)	
 
 

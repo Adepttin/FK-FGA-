@@ -15,7 +15,7 @@ p1 = 0.5
 nk = 6
 nkDMFT = 128
 nv = 20#128
-nvDMFT = 100#128
+nvDMFT = 200#128
 DMFTiter = 40
 relconv = 0.5
 DFiter = 5
@@ -36,7 +36,7 @@ typeList = ["Parquet", "LadderPH", "LadderPP"]
 
 occs = open("Occupations.txt", "w")
 
-occs.write("T\t\t\tmu\t\t\t\tn_DMFT\t\tn_Parquet\tn_ph\t\tnpp\n")
+occs.write("T\t\t\tmu\t\t\t\tn_DMFT\t\tn_Parquet\tn_ph\t\tn_pp\n")
 
 for i in range(0,len(temperatures)):
 	
@@ -60,7 +60,9 @@ for i in range(0,len(temperatures)):
 		pathSigmaCork = "./U05/" + modus + "/beta" + str(betaNames[i]) + "/DF4/SigmaDual/DualSig" + str(iteration-1)
 		
 		calcGCor(pathG1, pathSigma, pathSigmaCork, nk, nv, nvDMFT, beta, mu)
-
+		
+		#copyfile("GlocNew", "./U05/" + modus + "/beta" + str(betaNames[i]) + "/DF4/GlocNew")
+		
 		#read in resulting corrected local G (DMFT + DF)
 		GlocNew = np.fromfile("GlocNew", dtype = complex)
 
