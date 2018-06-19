@@ -40,6 +40,9 @@ occs.write("T\t\t\tmu\t\t\t\tn_DMFT\t\tn_Parquet\tn_ph\t\tnpp\n")
 
 for i in range(0,len(temperatures)):
 	
+	beta = betas[i]
+	mu = mus[i]
+	
 	#read in DMFT G and Sigma for current beta
 	pathG1 = "./U05/DMFT/beta" + str(betaNames[i]) + "/G1"
 	pathSigma = "./U05/DMFT/beta" + str(betaNames[i]) + "/Sigma"
