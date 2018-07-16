@@ -215,6 +215,7 @@ int main(int argc, char* argv[])
             }
 	}
 	Matsua = Matsua - nv;
+	writebin ("a" , Matsua , 2*nv);
 	delete Matsua;
 	
 	
