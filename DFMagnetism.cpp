@@ -50,12 +50,12 @@ int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk
 						//account for v+w exceeding frequency range
 						if( ((v+w) < nv) && ((v+w) >= -nv))
 						{
-							Gsum -= Gk[indexA]*Gk[indexB];
+							Gsum += Gk[indexA]*Gk[indexB];
 						}
 					}
 			}
 			
-			chibubble[(2*nv+1)*q+w]=Gsum/(double(nnk*nnk)*beta);
+			chibubble[(2*nv+1)*q+w]=-Gsum/(double(nnk*nnk)*beta);
 		}	
 	}
 
@@ -63,14 +63,21 @@ int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk
 	return(0);
 }
 
-int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, const  double beta, const int nv, const int nk, int* const qtok, int** const ksum, dcomp* chivertex)
+//calculates vertex contribution to magnetic susceptibilty
+//if FlocSep is not equal zero, then the first order diagram in Floc will be calculated separately on a larger frequency grid (nvFloc)
+int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown,  dcomp * const Flocup,  dcomp * const Flocdown, const int FlocSep, const  double beta, const int nv, const int nk, const int nvFloc, int* const qtok, int** const ksum, dcomp* chivertex)
 {
 	int indexA, indexB, indexC, indexD;
 	dcomp Fdownsum, Fupsum;
 	int nnk = nk*nk;
 	int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
 	
-
+	//calculating the first diagram (only Floc) separately on a nvFloc Matsubara frequency grid
+	if (FlocSep)
+	{
+			
+	}
+	
 	for (int q=0; q < ndistk; q++)
 	{
 		//calculating second term with Fdown
@@ -101,7 +108,7 @@ int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, con
 						//account for v+w exceeding frequency range
 						if( ((v+w) < nv) && ((v+w) >= -nv))
 						{
-							Fdownsum += Gk[indexA]*Gk[indexB]*Fdown[q][nnk*k+kk][2*nv*v+(v+w)]*Gk[indexC]*Gk[indexD];
+							Fdownsum -= Gk[indexA]*Gk[indexB]*Fdown[q][nnk*k+kk][2*nv*v+(v+w)]*Gk[indexC]*Gk[indexD];
 						}
 					}						
 				}
@@ -148,26 +155,42 @@ int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, con
 	return(0);
 }
 
+
 class MagnetismObject
 {
 	public:
+	//grid quantities
 	int nk, nv, nvin;
 	int ndistk;
 	
+	//parameters
 	double beta, mu;
+	
+	//dispersion
 	double* Ek;
 	
+	//new index for sum of two k-vectors
 	int ** ksum;
+	//new index for q (IBZ) to k (full BZ)
 	int * qtok;
-		
+	
+	//Sigma from DMFT
 	dcomp* Sigmaloc;
+	//Sigma corrections from DF
 	dcomp* Sigmacor;
-	dcomp* Matsus;
+	//full Green's function
 	dcomp* Gk;
 	
+	//Matsubara frequencies
+	dcomp* Matsus;
+	
+	//vertexfunctions
+	dcomp* Flocup;
+	dcomp* Flocdown;
 	dcomp *** Fup;
 	dcomp *** Fdown;
 	
+	//susceptibilites
 	dcomp* chibubble;
 	dcomp* chivertex;
 	
@@ -182,6 +205,9 @@ class MagnetismObject
 		qtok = MyParquet.qtok;
 		
 		Sigmacor = MyParquet.Sigmacor;
+		
+		Flocup = MyParquet.Flocup;
+		Flocdown = MyParquet.Flocdown;
 		
 		Fup = MyParquet.Fup;
 		Fdown = MyParquet.Fdown;
@@ -248,9 +274,9 @@ class MagnetismObject
 		return(0);
 	}
 	
-	int CalcChiVertex()
+	int CalcChiVertex(int FlocSep, int nvFloc)
 	{
-		calcVertexChi(Gk, Fup, Fdown, beta, nv, nk, qtok, ksum, chivertex);
+		calcVertexChi(Gk, Fup, Fdown, Flocup, Flocdown, FlocSep, beta, nv, nk, nvFloc, qtok, ksum, chivertex);
 		return(0);
 	}
 	
