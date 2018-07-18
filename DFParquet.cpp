@@ -10,6 +10,7 @@ using namespace std;
 // #include "routines.cpp"
 #include "DFParquetObj.cpp"
 #include "DFConductivity.cpp"
+#include "DFMagnetism.cpp"
 // Self contained DF based on DMFT results
 
 
