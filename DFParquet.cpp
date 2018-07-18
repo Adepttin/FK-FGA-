@@ -7,8 +7,8 @@ using namespace std;
 // #include <cmath>
 // #include <complex>
 
-//#include "routines.cpp"
-//#include "DFParquetObj.cpp"
+// #include "routines.cpp"
+#include "DFParquetObj.cpp"
 #include "DFConductivity.cpp"
 // Self contained DF based on DMFT results
 
@@ -30,8 +30,6 @@ int main(int argc, char* argv[])
 	
 	int i;
 	
-//  	int i,j,k,l;
-	
 	cout << "Blubb" <<  endl;
 	DFParquetParams ParqObj = DFParquetParams (nk , nv , nkin , nvin);
 	
@@ -47,35 +45,39 @@ int main(int argc, char* argv[])
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
 	
-// 	ParqObj.SigCalc();
-// 	ParqObj.UpdateGdual();
-// 	ParqObj.ResetVertex();
+	//reset phi and initialise F and Gamma to Floc
+	ParqObj.ResetVertex();
+	ParqObj.Parquetiter();
 	
-//reading Sigmadual and updating Gdual
+	
+	//reading Sigmadual and updating Gdual
 	ParqObj.ReadDualSig();
 	ParqObj.UpdateGdual();
 	
-//	cout << "Calculating Sdual" <<  endl;
-//	ParqObj.SigCalc();
-//	ParqObj.WriteGdual();
-//	ParqObj.FlexDualToRealSig(0);
-//	ParqObj.WriteDualSig();
-		
 	for(i = 0; i < maxit; i++)
 	{
 		cout << "BS Iteration " << i << "/" << maxit << endl;
 		ParqObj.BSiter();
 		cout << "Parquet" << endl;
 		ParqObj.Parquetiter();
-
-//		cout << "Calculating Sdual" <<  endl;
-//		ParqObj.SigCalc();
-//		ParqObj.UpdateGdual();
+		
+		cout << "Calculating Sdual" <<  endl;
+		ParqObj.SigCalc();
+		ParqObj.UpdateGdual();
 	}
 	
-	cout << "Calculating Sdual" <<  endl;
-	ParqObj.SigCalc();
-	ParqObj.UpdateGdual();
+
+	
+	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
+	CondObj.InitialiseStorage();
+	CondObj.InitialiseQuantities();
+	
+	CondObj.CalcCondBubble();
+	CondObj.CalcCondVertex();
+	
+	CondObj.WriteConductivities();
+	
+	CondObj.DeleteStorage();
 	
 	cout << "Writing Sdual" <<  endl;
 	ParqObj.FlexDualToRealSig(0);
