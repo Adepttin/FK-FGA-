@@ -58,12 +58,9 @@ int main(int argc, char* argv[])
 		//Parquet and calculation of Sigma
 		cout << "Parquet and Sigma ph" << endl;
 		ParqObj.ParquetAndSigCalc(0);
+		ParqObj.UpdateGdual();
 	}
-	
-	cout << "Update Gdual" <<  endl;
-	//ParqObj.SigCalc();
-	ParqObj.UpdateGdual();
-	
+
 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
 	CondObj.InitialiseStorage();
 	CondObj.InitialiseQuantities();
