@@ -30,11 +30,7 @@ int main(int argc, char* argv[])
 	
 	int i;
 	
-//  	int i,j,k,l;
-	
-	cout << "Blubb" <<  endl;
 	DFParquetParams ParqObj = DFParquetParams (nk , nv , nkin , nvin);
-	
 	cout << "Object built" <<  endl;
 	
 	cout << "Initialising 1P" <<  endl;
@@ -46,8 +42,12 @@ int main(int argc, char* argv[])
 	
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
+	
+	//reset Phi and initialise F and Gamma to Floc
+	ParqObj.ResetVertex();
+	ParqObj.Parquetiter();
 
-//reading Sigmadual and updating Gdual
+	//reading Sigmadual and updating Gdual
 	ParqObj.ReadDualSig();
 	ParqObj.UpdateGdual();
 	
@@ -75,6 +75,23 @@ int main(int argc, char* argv[])
 	CondObj.WriteConductivities();
 	
 	CondObj.DeleteStorage();
+	
+	//calculating susceptibility
+
+	MagnetismObject MagObj = MagnetismObject(ParqObj, beta, mu);
+	MagObj.InitialiseStorage();
+	MagObj.InitialiseQuantities();
+	
+	cout << "Calculating Chi Bubble" << endl;
+	MagObj.CalcChiBubble();
+	
+	cout << "Calculating Chi Vertex" << endl;
+	MagObj.CalcChiVertex();
+	
+	MagObj.WriteGreal();
+	MagObj.WriteChis();
+	
+	MagObj.DeleteStorage();
 	
 	cout << "Writing Sdual" <<  endl;
 	ParqObj.FlexDualToRealSig(0);
