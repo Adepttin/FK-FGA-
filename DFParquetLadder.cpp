@@ -43,9 +43,8 @@ int main(int argc, char* argv[])
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
 	
-	//reset Phi and initialise F and Gamma to Floc
+	//reset vertices
 	ParqObj.ResetVertex();
-	ParqObj.Parquetiter();
 
 	//reading Sigmadual and updating Gdual
 	ParqObj.ReadDualSig();
