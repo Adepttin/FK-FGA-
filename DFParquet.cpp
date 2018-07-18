@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
 	
-	//reset Phi and initialise F and Gamma to Floc
+	//reset phi and initialise F and Gamma to Floc
 	ParqObj.ResetVertex();
 	ParqObj.Parquetiter();
 	
@@ -78,6 +78,23 @@ int main(int argc, char* argv[])
 	CondObj.WriteConductivities();
 	
 	CondObj.DeleteStorage();
+	
+	//calculating susceptibility
+
+	MagnetismObject MagObj = MagnetismObject(ParqObj, beta, mu);
+	MagObj.InitialiseStorage();
+	MagObj.InitialiseQuantities();
+	
+	cout << "Calculating Chi Bubble" << endl;
+	MagObj.CalcChiBubble();
+	
+	cout << "Calculating Chi Vertex" << endl;
+	MagObj.CalcChiVertex();
+	
+	MagObj.WriteGreal();
+	MagObj.WriteChis();
+	
+	MagObj.DeleteStorage();
 	
 	cout << "Writing Sdual" <<  endl;
 	ParqObj.FlexDualToRealSig(0);
