@@ -351,7 +351,7 @@ int SigmaCalc(dcomp * const DualSig , dcomp ** const Fup, dcomp ** const Fdown, 
 	const  double norm = nnk;
 	int i,j,k,l;
 	
-	int k1,q1,k2;
+	int k1,q1,k2,s1;
 	
 	
 	for(j=0;j<nnk;j++) //k
@@ -370,7 +370,8 @@ int SigmaCalc(dcomp * const DualSig , dcomp ** const Fup, dcomp ** const Fdown, 
 		for(j=0;j<nnk;j++) //q
 		{
 			q1 = ktoq[j];
-			k2 = ksum[k1][j];
+			s1 = ksym[j];
+			k2 = ksum[ kmap[s1][k1] ][j];
 			
 //   cout << "  " << q1 << "/" << ndistk << "  " << j << "/" << nnk << "  " << k1 << "/" << nnk << "    " << ksum[k1][j] << "/" << nnk << endl;
 			for(k=-nv;k<nv;k++) //v
@@ -384,6 +385,7 @@ int SigmaCalc(dcomp * const DualSig , dcomp ** const Fup, dcomp ** const Fdown, 
 			
 		}
 	}
+	
 	for(i=0;i<ndistk;i++) //k
 	{
 		k1 = qtok[i];

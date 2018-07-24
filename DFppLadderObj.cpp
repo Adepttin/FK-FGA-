@@ -326,7 +326,7 @@ int SigmaCalc(dcomp * DualSig, dcomp ** const Fq, dcomp * const Gk, const int nk
 	const  double norm = nnk;
 	int i,j,k,l;
 	
-	int k1,q1,k2;
+	int k1,q1,k2,s1;
 	
 	
 	for(j=0;j<nnk;j++) //k
@@ -345,7 +345,8 @@ int SigmaCalc(dcomp * DualSig, dcomp ** const Fq, dcomp * const Gk, const int nk
 		for(j=0;j<nnk;j++) //q
 		{
 			q1 = ktoq[j];
-			k2 = kdif[k1][j];
+			s1 = ksym[j];
+			k2 = kdif[ kmap[s1][k1] ][j];
 			
 			for(k=-nv;k<nv;k++) //v
 			{
