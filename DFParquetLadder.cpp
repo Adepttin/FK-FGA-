@@ -47,10 +47,11 @@ int main(int argc, char* argv[])
 	//reset vertices
 	ParqObj.ResetVertex();
 
-	//reading Sigmadual and updating Gdual
+	//read in Sigmadual and update Gdual
 	ParqObj.ReadDualSig();
 	ParqObj.UpdateGdual();
 	
+	//calculate ph ladder	
 	for(i = 0; i < maxit; i++)
 	{
 		//BS only for ph
@@ -61,6 +62,8 @@ int main(int argc, char* argv[])
 		ParqObj.ParquetAndSigCalc(0);
 		ParqObj.UpdateGdual();
 	}
+	
+	//calculate optical conductivity
 
 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
 	CondObj.InitialiseStorage();
@@ -73,7 +76,7 @@ int main(int argc, char* argv[])
 	
 	CondObj.DeleteStorage();
 	
-	//calculating susceptibility
+	//calculate susceptibility
 
 	MagnetismObject MagObj = MagnetismObject(ParqObj, beta, mu);
 	MagObj.InitialiseStorage();
