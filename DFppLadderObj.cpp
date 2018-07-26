@@ -337,15 +337,16 @@ int SigmaCalc(dcomp * DualSig, dcomp ** const Fq, dcomp * const Gk, const int nk
 		}
 	}
 	
-	for(i=0;i<ndistk;i++) //k
-// 	for(k1=0;k1<nnk;k1++) //k
+// 	for(i=0;i<ndistk;i++) //k
+	for(k1=0;k1<nnk;k1++) //k
 	{
-		k1 = qtok[i];
+// 		k1 = qtok[i];
 		
 		for(j=0;j<nnk;j++) //q
 		{
 			q1 = ktoq[j];
-			s1 = ksym[j];
+// 			s1 = ksym[j];
+			k2 = kdif[k1][j];
 			k2 = kdif[ kmap[s1][k1] ][j];
 			
 			for(k=-nv;k<nv;k++) //v
@@ -360,21 +361,21 @@ int SigmaCalc(dcomp * DualSig, dcomp ** const Fq, dcomp * const Gk, const int nk
 		}
 	}
 	
-	for(i=0;i<ndistk;i++) //k
-	{
-		k1 = qtok[i];
-		
-		for(j=1;j<8;j++) //symmetries
-		{
-			k2 = kmap[j][k1];
-			
-			for(k=-nv;k<nv;k++) //v
-			{
-				DualSig[2*nv*k2 + k] = DualSig[2*nv*k1 + k];
-			}
-			
-		}
-	}
+// 	for(i=0;i<ndistk;i++) //k
+// 	{
+// 		k1 = qtok[i];
+// 		
+// 		for(j=1;j<8;j++) //symmetries
+// 		{
+// 			k2 = kmap[j][k1];
+// 			
+// 			for(k=-nv;k<nv;k++) //v
+// 			{
+// 				DualSig[2*nv*k2 + k] = DualSig[2*nv*k1 + k];
+// 			}
+// 			
+// 		}
+// 	}
 	
 	
 	return(0);

@@ -333,7 +333,7 @@ int FqCalc(dcomp ** const Fup, dcomp ** const Fdown, const double * const Cq2, d
 		{
 			for(l=-nv;l<nv;l++) //v'
 			{
-				Fup[i][k*2*nv+l] = Cq2[i]* ( a[k]*a[k] / (1. - a[k]*a[k]*Chiq[i][k*2*nv+k]) ) * ( a[l]*a[l] / (1. - a[l]*a[l]*Chiq[i][l*2*nv+l]) ) ;
+				Fup[i][k*2*nv+l] = Cq2[i]* ( a[k] / (1. - a[k]*a[k]*Chiq[i][k*2*nv+k]) ) * ( a[l] / (1. - a[l]*a[l]*Chiq[i][l*2*nv+l]) ) ;
 				Fdown[i][k*2*nv+l] = a[k]*a[l] / (1. - a[k]*a[l]*Chiq[i][k*2*nv+l]);
 			}
 		}
@@ -363,22 +363,26 @@ int SigmaCalc(dcomp * const DualSig , dcomp ** const Fup, dcomp ** const Fdown, 
 	}
 	
 // 	cout << "out" << endl;
-	for(i=0;i<ndistk;i++) //k
+// 	for(i=0;i<ndistk;i++) //k
+	for(k1=0;k1<nnk;k1++) //k
 	{
-		k1 = qtok[i];
+// 		k1 = qtok[i];
 		
 		for(j=0;j<nnk;j++) //q
 		{
+// 			q1 = ktoq[j];
+// 			s1 = ksym[j];
+// 			k2 = ksum[ kmap[s1][k1] ][j];
 			q1 = ktoq[j];
-			s1 = ksym[j];
-			k2 = ksum[ kmap[s1][k1] ][j];
+// 			s1 = ksym[j];
+			k2 = ksum[k1][j];
 			
 //   cout << "  " << q1 << "/" << ndistk << "  " << j << "/" << nnk << "  " << k1 << "/" << nnk << "    " << ksum[k1][j] << "/" << nnk << endl;
 			for(k=-nv;k<nv;k++) //v
 			{
 				for(l=-nv;l<nv;l++) //v'
 				{
-					DualSig[2*nv*k1 + k] -= ( Fup[q1][2*nv*k + l] + a[k]*a[k]*a[l]*a[l]*Chiq[q1][2*nv*k + l]/2. ) * Gk[k2*2*nv + l]/norm;
+					DualSig[2*nv*k1 + k] -= ( Fup[q1][2*nv*k + l] + a[k]*a[k]*a[l]*a[l]*Chiq[q1][2*nv*l + l]/2. ) * Gk[k2*2*nv + k]/norm;
 				}
 				DualSig[2*nv*k1 + k] += ( Fdown[q1][2*nv*k + k] + a[k]*a[k]*a[k]*a[k]*Chiq[q1][2*nv*k + k]/2. ) * Gk[k2*2*nv + k]/norm;
 			}
@@ -386,21 +390,21 @@ int SigmaCalc(dcomp * const DualSig , dcomp ** const Fup, dcomp ** const Fdown, 
 		}
 	}
 	
-	for(i=0;i<ndistk;i++) //k
-	{
-		k1 = qtok[i];
-		
-		for(j=1;j<8;j++) //symmetries
-		{
-			k2 = kmap[j][k1];
-			
-			for(k=-nv;k<nv;k++) //v
-			{
-				DualSig[2*nv*k2 + k] = DualSig[2*nv*k1 + k];
-			}
-			
-		}
-	}
+// 	for(i=0;i<ndistk;i++) //k
+// 	{
+// 		k1 = qtok[i];
+// 		
+// 		for(j=1;j<8;j++) //symmetries
+// 		{
+// 			k2 = kmap[j][k1];
+// 			
+// 			for(k=-nv;k<nv;k++) //v
+// 			{
+// 				DualSig[2*nv*k2 + k] = DualSig[2*nv*k1 + k];
+// 			}
+// 			
+// 		}
+// 	}
 	
 	return(0);
 }

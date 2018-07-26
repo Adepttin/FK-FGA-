@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
 		//Parquet and calculation of Sigma
 		cout << "Sigma calculation" << endl;
 		LadderObj.SigCalc();
+		LadderObj.UpdateGdual();
 	}
 	
 	cout << "Update Gdual" <<  endl;
