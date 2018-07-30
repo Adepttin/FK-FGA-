@@ -698,10 +698,10 @@ int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const F
 	{
 		for(j=-nv; j<nv; j++)
 		{
-			Sigmadualhf[i] += Flocup[2 * i*nv + j] * Gdualloc[j];
+			Sigmadualhf[i] -= Flocup[2 * i*nv + j] * Gdualloc[j];
 		}
 		
-		Sigmadualhf[i] -= Flocup[2 * i*nv + i] * Gdualloc[i];
+		Sigmadualhf[i] += Flocup[2 * i*nv + i] * Gdualloc[i];
 	}
 		
 	return(0);	
