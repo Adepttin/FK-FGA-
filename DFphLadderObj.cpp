@@ -382,9 +382,9 @@ int SigmaCalc(dcomp * const DualSig , dcomp ** const Fup, dcomp ** const Fdown, 
 			{
 				for(l=-nv;l<nv;l++) //v'
 				{
-					DualSig[2*nv*k1 + k] -= ( Fup[q1][2*nv*k + l] + a[k]*a[k]*a[l]*a[l]*Chiq[q1][2*nv*l + l]/2. ) * Gk[k2*2*nv + k]/norm;
+					DualSig[2*nv*k1 + k] -= ( Fdown[q1][2*nv*k + l] - a[k]*a[k]*a[l]*a[l]*Chiq[q1][2*nv*k + l]/2. ) * Gk[k2*2*nv + l]/norm;
 				}
-				DualSig[2*nv*k1 + k] += ( Fdown[q1][2*nv*k + k] + a[k]*a[k]*a[k]*a[k]*Chiq[q1][2*nv*k + k]/2. ) * Gk[k2*2*nv + k]/norm;
+				DualSig[2*nv*k1 + k] += ( Fup[q1][2*nv*k + k] - a[k]*a[k]*a[k]*a[k]*Chiq[q1][2*nv*k + k]/2. ) * Gk[k2*2*nv + k]/norm;
 			}
 			
 		}
