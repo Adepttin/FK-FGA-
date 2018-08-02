@@ -1,27 +1,3 @@
-// Prepare Dispersion relation operator for nk*nk k-mesh
-// Nearest neighbour-hopping square lattice is hardcoded so far
-template <typename numbertype>
-int calcEk(const int nk, numbertype* const Ek)
-{
-	int i,j;
-	numbertype Ex;
-	numbertype pi = acos( (-1.));
-	numbertype pistep = 2.*pi / nk;
-	const double t = 0.25;
-	
-	for(i = 0; i < nk; i++)
-	{
-		Ex = - 2. * t * cos( i * pistep - pi );
-		for(j = 0; j < nk; j++)
-		{
-			*(Ek + i*nk + j) = Ex - 2. * t * cos( j * pistep - pi );
-		}
-	}
-	
-	return(0);
-}
-
-
 // Prepare velocity-x-operator for nk*nk k-mesh
 // Nearest neighbour-hopping square lattice is hardcoded so far
 template <typename numbertype>
