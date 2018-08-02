@@ -102,21 +102,7 @@ int main(int argc, char* argv[])
 	
 	double* Epsilons = new double [nk*nk]; // kinetic energies
 	
-	{
-		double pi = acos( (-1.));
-		double pistep = 2.*pi / nk;
-		double epsa;
-		
-		for(i=0;i<nk;i++)
-		{
-			epsa = cos(i*pistep - pi);
-			
-			for(j=0;j<nk;j++)
-			{
-				*(Epsilons + i*nk + j) = -2. * t * (epsa + cos(j*pistep - pi));
-			}
-		}
-	}
+	calcEk(nk, Epsilons);
 	
 	i = PrecalciNu(iNu , beta , nv);
 	
@@ -252,21 +238,7 @@ int main(int argc, char* argv[])
 	
 	double* inEpsilons = new double [nkin*nkin]; // kinetic energies
 	
-	{
-		double pi = acos( (-1.));
-		double pistep = 2.*pi / nkin;
-		double epsa;
-		
-		for(i=0;i<nkin;i++)
-		{
-			epsa = cos(i*pistep - pi);
-			
-			for(j=0;j<nkin;j++)
-			{
-				*(inEpsilons + i*nkin + j) = -2. * t * (epsa + cos(j*pistep - pi));
-			}
-		}
-	}
+	calcEk(nkin, inEpsilons);
 	
 	dcomp* Gdual = new dcomp[2*nvin*nkin*nkin];
 	Gdual += nvin;
