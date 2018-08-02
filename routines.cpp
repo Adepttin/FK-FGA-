@@ -51,6 +51,29 @@ int writebin (const char* filename , numbertype* const source , const int size )
 	return(0);
 }
 
+// Prepare Dispersion relation operator for nk*nk k-mesh
+// Nearest neighbour-hopping square lattice is hardcoded so far
+template <typename numbertype>
+int calcEk(const int nk, numbertype* const Ek)
+{
+	int i,j;
+	numbertype Ex;
+	numbertype pi = acos( (-1.));
+	numbertype pistep = 2.*pi / nk;
+	const double t = 0.25;
+	
+	for(i = 0; i < nk; i++)
+	{
+		Ex = - 2. * t * cos( i * pistep - pi );
+		for(j = 0; j < nk; j++)
+		{
+			*(Ek + i*nk + j) = Ex - 2. * t * cos( j * pistep - pi );
+		}
+	}
+	
+	return(0);
+}
+
 
 // // calculate q-shifted sum over quadratic (2D) Brillouin zone of Gk and Gkp = sum (Gk(k1) * Gkp(k1 + q)) 
 // // calculation is carried out for (2*nv2 + boson) frequencies. Gk and Gkp have to be arranged as Gk[v1][kx][ky]
