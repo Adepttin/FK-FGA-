@@ -82,6 +82,18 @@ int main(int argc, char* argv[])
 	LadderObj.WriteDualSig();
 	LadderObj.WriteGdual();
 	
+    ConductivityObject CondObj = ConductivityObject(LadderObj, beta, mu);
+	cout << "Initialise Conductivity storage" <<  endl;
+	CondObj.InitialiseStorage();
+	CondObj.InitialiseQuantities();
+	
+	cout << "Calculate Bubble" <<  endl;
+	CondObj.CalcCondBubble();
+	cout << "Calculate ConnOhm" <<  endl;
+	CondObj.CalcCondVertex();
+	
+	CondObj.WriteConductivities();
+	
 	cout << "Deleting Khelper" <<  endl;
 	LadderObj.DeleteKQuantities();
 	cout << "Writing 1P quantities" <<  endl;

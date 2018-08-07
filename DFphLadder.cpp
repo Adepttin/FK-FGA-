@@ -66,6 +66,25 @@ int main(int argc, char* argv[])
 	//ParqObj.SigCalc();
 	LadderObj.UpdateGdual();
 	
+	cout << "Writing Sdual" <<  endl;
+	LadderObj.FlexDualToRealSig(0);
+	LadderObj.WriteSigCors();
+	LadderObj.WriteDualSig();
+	LadderObj.WriteGdual();
+	
+    ConductivityObject CondObj = ConductivityObject(LadderObj, beta, mu);
+	cout << "Initialise Conductivity storage" <<  endl;
+	CondObj.InitialiseStorage();
+	CondObj.InitialiseQuantities();
+	
+	cout << "Calculate Bubble" <<  endl;
+	CondObj.CalcCondBubble();
+	cout << "Calculate ConnOhm" <<  endl;
+	CondObj.CalcCondVertex();
+	
+	CondObj.WriteConductivities();
+	
+	CondObj.DeleteStorage();
 // 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
 // 	CondObj.InitialiseStorage();
 // 	CondObj.InitialiseQuantities();
@@ -77,11 +96,6 @@ int main(int argc, char* argv[])
 // 	
 // 	CondObj.DeleteStorage();
 	
-	cout << "Writing Sdual" <<  endl;
-	LadderObj.FlexDualToRealSig(0);
-	LadderObj.WriteSigCors();
-	LadderObj.WriteDualSig();
-	LadderObj.WriteGdual();
 	
 	cout << "Deleting Khelper" <<  endl;
 	LadderObj.DeleteKQuantities();
