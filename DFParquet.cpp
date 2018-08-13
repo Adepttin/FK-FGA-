@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
 	
 	cout << "Object built" <<  endl;
 	
+	//initialise storage
 	cout << "Initialising 1P" <<  endl;
 	ParqObj.InitialiseOneParticle();
 	cout << "Initialising Kuantities" <<  endl;
@@ -49,8 +50,7 @@ int main(int argc, char* argv[])
 	//reset vertices
 	ParqObj.ResetVertex();
 	
-	
-	//reading Sigmadual and updating Gdual
+	//read in Sigmadual and update Gdual
 	ParqObj.ReadDualSig();
 	ParqObj.UpdateGdual();
 	
@@ -66,7 +66,15 @@ int main(int argc, char* argv[])
 		ParqObj.UpdateGdual();
 	}
 	
-
+	//calculate correctios to DMFT self energy
+	ParqObj.FlexDualToRealSig(0);
+	//write output
+	cout << "Writing Sdual" <<  endl;
+	ParqObj.WriteSigCors();
+	ParqObj.WriteDualSig();
+	ParqObj.WriteGdual();
+	
+	//calculate optical conductivity (current-current correlator)
 	
 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
 	CondObj.InitialiseStorage();
@@ -79,7 +87,7 @@ int main(int argc, char* argv[])
 	
 	CondObj.DeleteStorage();
 	
-	//calculating susceptibility
+	//calculate susceptibility (density-density correlator)
 
 	MagnetismObject MagObj = MagnetismObject(ParqObj, beta, mu);
 	MagObj.InitialiseStorage();
@@ -96,12 +104,7 @@ int main(int argc, char* argv[])
 	
 	MagObj.DeleteStorage();
 	
-	cout << "Writing Sdual" <<  endl;
-	ParqObj.FlexDualToRealSig(0);
-	ParqObj.WriteSigCors();
-	ParqObj.WriteDualSig();
-	ParqObj.WriteGdual();
-	
+	//delete storage
 	cout << "Deleting Khelper" <<  endl;
 	ParqObj.DeleteKQuantities();
 	cout << "Writing 1P quantities" <<  endl;
