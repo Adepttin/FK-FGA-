@@ -237,7 +237,7 @@ class MagnetismObject
 	{
 		readbin ("Sigma", Sigmaloc-nvin, 2*nvin);
 		
-		calcEkMag(nk, Ek);
+		calcEk(nk, Ek);
 		
 		calcGreal( Sigmacor, Sigmaloc, Ek, nv, nk, mu, beta, Gk);
 		
