@@ -42,18 +42,12 @@ int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk
 
 //calculates vertex contribution to magnetic susceptibilty
 //if FlocSep is not equal zero, then the first order diagram in Floc will be calculated separately on a larger frequency grid (nvFloc)
-int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown,  dcomp * const Flocup,  dcomp * const Flocdown, const int FlocSep, const  double beta, const int nv, const int nk, const int nvFloc, int* const qtok, int** const ksum, dcomp* chivertex)
+int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, const  double beta, const int nv, const int nk, int* const qtok, int** const ksum, dcomp* chivertex)
 {
 	int indexA, indexB, indexC, indexD;
 	dcomp Fdownsum, Fupsum;
 	int nnk = nk*nk;
 	int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
-	
-	//calculating the first diagram (only Floc) separately on a nvFloc Matsubara frequency grid
-	if (FlocSep)
-	{
-			
-	}
 	
 	for (int q=0; q < ndistk; q++)
 	{
@@ -251,9 +245,9 @@ class MagnetismObject
 		return(0);
 	}
 	
-	int CalcChiVertex(int FlocSep, int nvFloc)
+	int CalcChiVertex()
 	{
-		calcVertexChi(Gk, Fup, Fdown, Flocup, Flocdown, FlocSep, beta, nv, nk, nvFloc, qtok, ksum, chivertex);
+		calcVertexChi(Gk, Fup, Fdown,beta, nv, nk, qtok, ksum, chivertex);
 		return(0);
 	}
 	
