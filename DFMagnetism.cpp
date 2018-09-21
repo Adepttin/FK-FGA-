@@ -32,7 +32,7 @@ int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk
 					}
 			}
 			
-			chibubble[(2*nv+1)*q+w]=-Gsum/(double(nnk*nnk)*beta);
+			chibubble[(2*nv+1)*q+w]=-Gsum/(double(nnk*nnk)*beta*beta);
 		}	
 	}
 
