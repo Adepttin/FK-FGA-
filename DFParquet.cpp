@@ -11,32 +11,30 @@ using namespace std;
 #include "DFParquetObj.cpp"
 #include "DFConductivity.cpp"
 #include "DFMagnetism.cpp"
-// Self contained DF based on DMFT results
 
+// Self contained DF parquet based on DMFT results
 
 int main(int argc, char* argv[])
 {
-	const double beta = atof(argv[1]); // Inverse Temperature
-	const double U = atof(argv[2]);
-	double mu = atof(argv[3]);
-	const double t = 0.25;
-	double Ef = atof(argv[4]);
-	double p1 = atof(argv[5]);
-	const int nk = atoi(argv[6]); // number of k-values per dimension
-	const int nkin = atoi(argv[7]); // number of k-values per dimension in input
-	const int nv = atoi(argv[8]); //Number of matsubara frequencies used
-	const int nvin = atoi(argv[9]); //Number of matsubara frequencies in input
-	const double relconv = atoi(argv[10]); //desired relative convergence for DF-corrections
-	const int maxit = atoi(argv[11]); //maximum number of iterative DF loops
+	//read in parameters
+	const double beta = atof(argv[1]); //inverse Temperature
+	const double U = atof(argv[2]); //interaction strength
+	double mu = atof(argv[3]); //chemical potential
+	const double t = 0.25; //hopping parameter
+	double p1 = atof(argv[4]); //occupation of localized f-electrons
+	const int nk = atoi(argv[5]); //number of k-values per dimension
+	const int nkin = atoi(argv[6]); //number of k-values per dimension in DMFT input
+	const int nv = atoi(argv[7]); //number of Matsubara frequencies used
+	const int nvin = atoi(argv[8]); //number of Matsubara frequencies in DMFT input
+	const int maxit = atoi(argv[9]); //number of iterative DF loops
 	
 	int i;
 	
-	cout << "Blubb" <<  endl;
+	//create instance of class DFParquetParams
 	DFParquetParams ParqObj = DFParquetParams (nk , nv , nkin , nvin);
-	
 	cout << "Object built" <<  endl;
 	
-	//initialise storage
+	//initialise quantities and allocate memory
 	cout << "Initialising 1P" <<  endl;
 	ParqObj.InitialiseOneParticle();
 	cout << "Initialising Kuantities" <<  endl;
@@ -44,67 +42,85 @@ int main(int argc, char* argv[])
 	cout << "Initialising V" <<  endl;
 	ParqObj.InitialiseVertexStorage();
 	
+	//read in DMFT results
 	cout << "Reading DMFT" <<  endl;
 	ParqObj.ReadDMFT();
 	
 	//reset vertices
-	ParqObj.ResetVertex();
+	ParqObj.ResetVertex();	
 	
-	//read in Sigmadual and update Gdual
+	//read in dual self energy and update dual propagator
 	ParqObj.ReadDualSig();
 	ParqObj.UpdateGdual();
 	
+	//DF loop
 	for(i = 0; i < maxit; i++)
 	{
-		cout << "BS Iteration " << i << "/" << maxit << endl;
+		//call Bethe-Salpeter equations
+		cout << "BS Iteration " << i+1 << "/" << maxit << endl;
 		ParqObj.BSiter();
+		//call parquet equation
 		cout << "Parquet" << endl;
 		ParqObj.Parquetiter();
-		
-		cout << "Calculating Sdual" <<  endl;
-		ParqObj.SigCalc();
-		ParqObj.UpdateGdual();
 	}
 	
-	//calculate correctios to DMFT self energy
-	ParqObj.FlexDualToRealSig(0);
-	//write output
+	//update dual self energy and propagator
+	cout << "Calculating Sdual" <<  endl;
+	ParqObj.SigCalc();
+	ParqObj.UpdateGdual();
+	
+	//write self energy corrections, dual self energy and propagator
 	cout << "Writing Sdual" <<  endl;
+	ParqObj.FlexDualToRealSig(0);
 	ParqObj.WriteSigCors();
 	ParqObj.WriteDualSig();
 	ParqObj.WriteGdual();
 	
-	//calculate optical conductivity (current-current correlator)
 	
+	//calculate current-current correlation function
+	
+	//create instance of class ConductivityObject	
 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
+	
+	//initialise quantities and allocate memory
 	CondObj.InitialiseStorage();
 	CondObj.InitialiseQuantities();
 	
+	//calculate bubble
 	CondObj.CalcCondBubble();
+	
+	//calculate vertex corrections
 	CondObj.CalcCondVertex();
 	
+	//write bubble and vertex corrections
 	CondObj.WriteConductivities();
 	
+	//release memory
 	CondObj.DeleteStorage();
 	
-	//calculate susceptibility (density-density correlator)
+	
+	//calculate density-density correlation function
 
+	//create instance of class MagnetismObject
 	MagnetismObject MagObj = MagnetismObject(ParqObj, beta, mu);
+	
+	//initialise quantities and allocate memory
 	MagObj.InitialiseStorage();
 	MagObj.InitialiseQuantities();
 	
-	cout << "Calculating Chi Bubble" << endl;
+	//calculate bubble
 	MagObj.CalcChiBubble();
-	
-	cout << "Calculating Chi Vertex" << endl;
+
+	//calculate vertex correction
 	MagObj.CalcChiVertex();
 	
-	MagObj.WriteGreal();
+	//write bubble and vertex corrections
 	MagObj.WriteChis();
 	
+	//release memory
 	MagObj.DeleteStorage();
 	
-	//delete storage
+	//release memory
 	cout << "Deleting Khelper" <<  endl;
 	ParqObj.DeleteKQuantities();
 	cout << "Writing 1P quantities" <<  endl;
@@ -112,6 +128,7 @@ int main(int argc, char* argv[])
 	cout << "Deleting Vertices" <<  endl;
 	ParqObj.DeleteVertexStorage();
 	
+	//write parameters to txt file
 	ofstream outfile;
 	//Output-scope
 	{
@@ -120,7 +137,6 @@ int main(int argc, char* argv[])
 	outfile << "U = " << U  << "\n" ;
 	outfile << "mu = " << mu  << "\n" ;
 	outfile << "t = " << t  << "\n" ;
-	outfile << "Ef = " << Ef  << "\n" ;
 	outfile << "p1 = " << p1  << "\n" ;
 	outfile << "nk = " << nk  << "\n" ;
 	outfile << "nv = " << nv  << "\n" ;
