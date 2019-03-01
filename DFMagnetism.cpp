@@ -1,4 +1,6 @@
-//calculate bubble term for chi
+//class for calculating the density-density correlation function
+
+//calculate bubble term
 int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk, int* const qtok, int** const ksum, dcomp* chibubble)
 {
 	int indexA, indexB;
@@ -18,10 +20,10 @@ int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk
 			{
 					for (int v=-nv; v < nv; v++)
 					{
-						//index for k and v
+						//index for (k,v)
 						indexA = 2*nv*k+v;
 						
-						//index for k+q and v+w
+						//index for (k+q,v+w)
 						indexB = 2*nv*ksum[qtok[q]][k]+(v+w);
 						
 						//account for v+w exceeding frequency range
@@ -32,16 +34,14 @@ int calcBubbleChi(dcomp* const Gk, const double beta, const int nv, const int nk
 					}
 			}
 			
-			chibubble[(2*nv+1)*q+w]=-Gsum/(double(nnk*nnk)*beta*beta);
+			chibubble[(2*nv+1)*q+w]=-Gsum/(double(nnk)*beta*beta);
 		}	
 	}
-
 	
 	return(0);
 }
 
-//calculates vertex contribution to magnetic susceptibilty
-//if FlocSep is not equal zero, then the first order diagram in Floc will be calculated separately on a larger frequency grid (nvFloc)
+//calculate vertex corrections
 int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, const  double beta, const int nv, const int nk, int* const qtok, int** const ksum, dcomp* chivertex)
 {
 	int indexA, indexB, indexC, indexD;
@@ -51,7 +51,7 @@ int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, con
 	
 	for (int q=0; q < ndistk; q++)
 	{
-		//calculating second term with Fdown
+		//calculating second term with Fdown (v=v')
 		for (int w=-nv; w < nv +1 ; w++)
 		{
 			Fdownsum=0;
@@ -63,18 +63,17 @@ int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, con
 				{
 					for (int v=-nv; v<nv; v++)
 					{						
-						//index for k and v
+						//index for (k,v)
 						indexA = 2*nv*k+v;
 						
-						//index for k+q and v+w
+						//index for (k+q,v+w)
 						indexB = 2*nv*ksum[qtok[q]][k]+(v+w);
 						
-						//index for k' and v
+						//index for (k',v)
 						indexC = 2*nv*kk+v;
 						
-						//index for k'+q and v+w
+						//index for (k'+q,v+w)
 						indexD = 2*nv*ksum[qtok[q]][kk]+(v+w);
-						
 						
 						//account for v+w exceeding frequency range
 						if( ((v+w) < nv) && ((v+w) >= -nv))
@@ -102,16 +101,16 @@ int calcVertexChi(dcomp* const Gk, dcomp*** const Fup, dcomp*** const Fdown, con
 				{
 					for (int vv=-nv; vv<nv; vv++)
 					{
-						//index for k and v
+						//index for (k,v)
 						indexA = 2*nv*k+v;
 
-						//index for k+q and v
+						//index for (k+q,v)
 						indexB = 2*nv*ksum[qtok[q]][k]+v;
 
-						//index for k' and v'
+						//index for (k',v')
 						indexC = 2*nv*kk+vv;
 
-						//index for k'+q and v'
+						//index for (k'+q,v')
 						indexD = 2*nv*ksum[qtok[q]][kk]+vv;
 
 						Fupsum += Gk[indexA]*Gk[indexB]*Fup[q][nnk*k+kk][2*nv*v+vv]*Gk[indexC]*Gk[indexD];
@@ -131,40 +130,50 @@ class MagnetismObject
 {
 	public:
 	//grid quantities
+	
+	//nk - lattice size
+	//nv - number of Matsubara frequencies
+	//nvin - number of DMFT Matsubara frequencies
 	int nk, nv, nvin;
+	//number of points in irreducible BZ
 	int ndistk;
 	
 	//parameters
 	double beta, mu;
 	
-	//dispersion
+	//dispersion relation
 	double* Ek;
 	
-	//new index for sum of two k-vectors
+	//sum of two momenta
 	int ** ksum;
-	//new index for q (IBZ) to k (full BZ)
+	//convert q index on irreducible BZ to k index on full BZ
 	int * qtok;
 	
-	//Sigma from DMFT
+	//local self energy from DMFT
 	dcomp* Sigmaloc;
-	//Sigma corrections from DF
+	//self energy corrections from DF
 	dcomp* Sigmacor;
-	//full Green's function
+	//lattice Green's function
 	dcomp* Gk;
 	
 	//Matsubara frequencies
 	dcomp* Matsus;
 	
-	//vertexfunctions
+	//vertex quantities
+	
+	//local vertex function
 	dcomp* Flocup;
 	dcomp* Flocdown;
+	//full vertex function
 	dcomp *** Fup;
 	dcomp *** Fdown;
 	
-	//susceptibilites
+	//bubble density-density correlation function
 	dcomp* chibubble;
+	//vertex corrections of density-density correlation function
 	dcomp* chivertex;
 	
+	//constructor using parquet class
 	template <class Parquet>
 	MagnetismObject(Parquet MyParquet, double inbeta, double inmu)
 	{
@@ -258,6 +267,7 @@ class MagnetismObject
 		return(0);
 	}
 	
+	//write lattice Green's function including DF corrections
 	int WriteGreal()
 	{
 		writebin("Greal", Gk - nv, 2*nv*nk*nk);
