@@ -1,2 +1,2 @@
 # FK-FGA-
-Development of parquet-DF code for FKM
+Development of parquet dual fermion code for the Falicov-Kimball model
