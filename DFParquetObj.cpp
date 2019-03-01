@@ -9,47 +9,13 @@ using namespace std;
 #include <algorithm>
 #include "routines.cpp"
 
-// Self contained DF based on DMFT results
+//class for self contained DF parquet calculation based on DMFT results
 
+//------------------------
+//Bethe-Salpeter equations
+//------------------------
 
-inline int RC( const int k1 , const int k2)
-//
-{
-	return ((k1*(k1+1))/2 + k2);
-}
-
-int SetupQK(int ** const QK , const int nk)
-{
-// 	const int nnk = nk*nk;
-// 	const int ndistk = (nk/2 + 1)*(nk/2+2)/2;
-	
-	int i,j,k,l;
-	int ca, cb;
-	int dumi, dumj;
-	
-	for(i=0; i<=nk/2;  i++)
-	{
-		for(j=0; j<=i;  j++)
-		{
-			ca = RC (i,j);
-			for(k=0; k < nk;  k++)
-			{
-				dumi = ((i+k+nk/2)%nk)*nk;
-				cb = k * nk;
-				for(l=0; l < nk;  l++)
-				{
-					dumj = ((j+l+nk/2)%nk);
-					
-					QK[ca][cb+l] = dumi + dumj;
-				}
-			}
-		}
-	}
-	
-	
-	return (0);
-}
-
+//Bethe-Salpeter equation in the ph channel for fixed k and k'
 int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcomp ** const Gphdown, dcomp ** const Fup, dcomp ** const Fdown , const int nk , const int nv)
 {	
 	const int nnk = nk*nk;
@@ -58,6 +24,7 @@ int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcom
 	int c1;
 	int cv;
 	
+	//initialize Phis to zero
 	for(i=-nv; i<nv;  i++)
 	{
 		for(j=-nv; j<nv;  j++)
@@ -72,13 +39,17 @@ int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcom
 		for(j=0; j<nk; j++)
 		{
 			c1 = i*nk + j;
+			
 			for(k=-nv; k<nv; k++)
 			{
 				for(l=-nv; l<nv; l++)
 				{					
 					cv = k*2*nv + l;
+					
+					//calculate Phi down
 					Pphdown[cv] -= (Fdown[c1][cv] * Gphdown[c1*nnk][cv]);
 					
+					//calculate Phi up
 					Pphup[cv] += (Fup[c1][cv] * Gphdown[c1*nnk][l*nnv] + Fdown[c1][k*nnv] * Gphup[c1*nnk][cv]);
 					
 					for(m=-nv; m<nv; m++)
@@ -92,6 +63,7 @@ int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcom
 		}
 	}
 	
+	//normalization 1/(nk)^2
 	for(i=-nv; i<nv;  i++)
 	{
 		for(j=-nv; j<nv;  j++)
@@ -104,6 +76,7 @@ int kBSph(dcomp * const Pphup, dcomp * const Pphdown, dcomp ** const Gphup, dcom
 	return (0);
 }
 
+//Bethe-Salpeter equation in the ph channel with vertex functions at fixed q
 int qBSph(dcomp ** const Pphup, dcomp ** const Pphdown, dcomp ** const Gphup, dcomp ** const Gphdown, dcomp ** const Fup, dcomp ** const Fdown , const int nk , const int nv)
 {
 	const int nnk = nk*nk;
@@ -111,17 +84,21 @@ int qBSph(dcomp ** const Pphup, dcomp ** const Pphdown, dcomp ** const Gphup, dc
 	int i,j,k,l;
 	int c1,c2;
 	
-	for(i=0; i<nk;  i++)
+	for(i=0; i<nk;  i++) //k
 	{
 		for(j=0; j<nk;  j++)
 		{
+			//k
 			c1 = i*nk + j;
-			for(k=0; k<nk;  k++)
+
+			for(k=0; k<nk;  k++) //k'
 			{
 				for(l=0; l<nk;  l++)
 				{
-					
+					//k'
 					c2 = k*nk + l;
+					
+					//call Bethe-Salpeter equation for fixed k and k'
 					kBSph( Pphup[c1*nnk+c2], Pphdown[c1*nnk+c2], (Gphup+c2), (Gphdown+c2), (Fup+c1*nnk), (Fdown+c1*nnk), nk , nv);
 				}
 			}
@@ -131,13 +108,15 @@ int qBSph(dcomp ** const Pphup, dcomp ** const Pphdown, dcomp ** const Gphup, dc
 	return (0);
 }
 
+//Bethe-Salpeter equation in the ph channel
 int BSph(dcomp *** const Pphup, dcomp *** const Pphdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown , const int nk , const int nv)
 {	
 	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
 	int i;
 	
-	for(i=0; i<ndistk;  i++)
+	for(i=0; i<ndistk;  i++) //q
 	{
+		//call qBSph for fixed q
 		qBSph( Pphup[i], Pphdown[i], Gphup[i], Gphdown[i], Fup[i], Fdown[i], nk , nv);
 	}
 	
@@ -145,6 +124,8 @@ int BSph(dcomp *** const Pphup, dcomp *** const Pphdown, dcomp *** const Gphup, 
 }
 
 
+
+//Bethe-Salpeter equation in the pp channel
 int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Fup, dcomp *** const Fdown , const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
 {	
 	const int ndistk = (nk/2 + 1)*(nk/2+2)/2;
@@ -156,15 +137,20 @@ int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, 
 	int dumk1, dumk2;
 	
 	for(i = 0; i < ndistk; i++) //q
-	{		
+	{	
+		//q as k variable (on full BZ)
 		kq = qtok[i];
+		
 		for(j = 0; j < nnk; j++)  //k
 		{
 			for(k = 0; k < nnk; k++)  //k'
 			{
+				//k + q
 				qkp = ksum[kq][k];
+				//k + k' + q
 				qkkp = ksum[j][qkp];
 				
+				//initialize Phis to zero
 				for(m = -nv; m < nv; m++)  //v
 				{
 					for(n = -nv; n < nv; n++)  //vp
@@ -176,29 +162,41 @@ int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, 
 				
 				for(l = 0; l < nnk; l++)  //k1
 				{
+					//k + q - k1
 					dumk1 = kdif[qkp][l];
+					//k + q - k1 as q index (on irreducible BZ)
 					q1 = ktoq[dumk1];
+					//symmetry index for k + q - k1
 					s1 = ksym[dumk1];
+					//k1 - k'
 					dumk2 = kdif[l][k];
+					//k1 - k' as q index (on irreducible BZ)
 					q2 = ktoq[dumk2];
+					//symmetry index for k1 - k'
 					s2 = ksym[dumk2];
+					//k + k' + q - k1
 					khelp = kdif[qkkp][l];
 					
+					//index for (k,k1)
 					dumk1 = (kmap[s1][j] * nnk + kmap[s1][l]);
+					//index for (k + k' + q -k1, k')
 					dumk2 = (kmap[s2][khelp] * nnk + kmap[s2][k]);
 					
 					for(m = -nv; m < nv; m++)  //v
 					{
 						for(n = -nv; n < nv; n++)  //vp
 						{
+							//calculate Phi up
 							Pppup[i][j*nnk+k][m*2*nv+n] += 0.5*( Gppup[q1][dumk1][m*2*nv+n] * Fup[q2][dumk2][m*2*nv+n] + Gppdown[q1][dumk1][m*2*nv+n] * Fdown[q2][dumk2][n*2*nv+m] );
 							
+							//calculate Phi down
 							Pppdown[i][j*nnk+k][m*2*nv+n] += 0.5*( Gppup[q1][dumk1][m*2*nv+n] * Fdown[q2][dumk2][m*2*nv+n] + Gppdown[q1][dumk1][m*2*nv+n] * Fup[q2][dumk2][n*2*nv+m] );
 						}
 					}
 					
 				}
 				
+				//normalization 1/(nk)^2
 				for(m = -nv; m < nv; m++)  //v
 				{
 					for(n = -nv; n < nv; n++)  //vp
@@ -216,7 +214,79 @@ int BSpp(dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Gppup, 
 	return (0);
 }
 
+//------------------------
+//parquet equation
+//------------------------
 
+//parquet equation
+int ParquetReassembly(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown, dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Pphup, dcomp *** const Pphdown, dcomp * const Lambdaup, dcomp * const Lambdadown, dcomp * const Gk, const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
+{
+	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
+	const int nnk = nk*nk;
+	
+	int i,j,k,l,m;
+	int q1,k1;
+	int s1;
+	int dumk1, dumk2;
+	
+	for(i=0;i<ndistk;i++) //q
+	{
+		for(j=0;j<nnk;j++) //k
+		{
+			//k + q
+			k1 = ksum[qtok[i]][j];
+			
+			for(k=0;k<nnk;k++) //k'
+			{
+				//k' - k
+				dumk1 = (kdif[k][j]);
+				//k' - k as q index on irreducible BZ
+				q1 = ktoq[dumk1];
+				//symmetry index for k' - k
+				s1 = ksym[dumk1];
+				
+				//index for (k,k')
+				dumk1 = j*nnk+k;
+				//index for (k,k+q)
+				dumk2 = (kmap[s1][j])*nnk+kmap[s1][k1];
+				
+				for(l=-nv;l<nv;l++) //v
+				{
+					for(m=-nv;m<nv;m++) //v'
+					{
+						//calculate F up
+						Fup[i][dumk1][l*2*nv+m] = Lambdaup[l*2*nv+m] + Pppup[i][dumk1][l*2*nv+m] + Pphup[i][dumk1][l*2*nv+m] + Pphdown[q1][dumk2][l*2*nv+m];
+						
+						//calculate F down
+						Fdown[i][dumk1][l*2*nv+m] = Lambdadown[l*2*nv+m] + Pppdown[i][dumk1][l*2*nv+m] + Pphdown[i][dumk1][l*2*nv+m] + Pphup[q1][dumk2][l*2*nv+m];
+						
+						//calculate Gamma pp up
+						Gppup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pppup[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + m])*(Gk[k1*2*nv + l]);
+						
+						//calculate Gamma pp down
+						Gppdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pppdown[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + l])*(Gk[k1*2*nv + m]);
+						
+						//calculate Gamma ph up
+						Gphup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pphup[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + m])*(Gk[k1*2*nv + m]);
+						
+						//calculate Gamma ph down
+						Gphdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pphdown[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + l])*(Gk[k1*2*nv + m]);
+						
+					}
+				}
+			}
+		}
+	}
+	
+	return(0);
+}
+
+//--------------------------------------------------------------------
+//initialisation of k quantities, inclduing some symmetry maps for BZ
+//--------------------------------------------------------------------
+
+//initialise ksum
+//ksum gives the sum of two momenta
 int initksum(int*const*const ksum , const int nk)
 {
 	int kx1,kx2,ky1,ky2;
@@ -227,6 +297,7 @@ int initksum(int*const*const ksum , const int nk)
 		for(kx2 = 0; kx2 < nk; kx2++)
 		{
 			sum1 = (kx1+kx2+nk/2)%nk;
+			
 			for(ky1 = 0; ky1 < nk; ky1++)
 			{
 				for(ky2 = 0; ky2 < nk; ky2++)
@@ -241,6 +312,8 @@ int initksum(int*const*const ksum , const int nk)
 	return(0);
 }
 
+//initialise kdif
+//kdif gives the difference of two momenta
 int initkdif(int*const*const kdif , const int nk)
 {
 	int kx1,kx2,ky1,ky2;
@@ -251,6 +324,7 @@ int initkdif(int*const*const kdif , const int nk)
 		for(kx2 = 0; kx2 < nk; kx2++)
 		{
 			dif1 = (kx1-kx2+(3*nk)/2)%nk;
+			
 			for(ky1 = 0; ky1 < nk; ky1++)
 			{
 				for(ky2 = 0; ky2 < nk; ky2++)
@@ -265,7 +339,14 @@ int initkdif(int*const*const kdif , const int nk)
 	return(0);
 }
 
+//auxiliary function for use in initktoq
+inline int RC( const int k1 , const int k2)
+{
+	return ((k1*(k1+1))/2 + k2);
+}
 
+//initialise ktoq
+//ktoq converts a k index on full BZ to a q index on irreducible BZ
 int initktoq(int*const ktoq , const int nk)
 {
 	int kx,ky;
@@ -290,10 +371,30 @@ int initktoq(int*const ktoq , const int nk)
 	return(0);
 }
 
+//iniitalise qtok
+//qtok converts a q index on irreducible BZ to a k index on full BZ
+int initqtok(int*const qtok , const int nk)
+{
+	int kx,ky;
+	int c1;
+	
+	for(kx=0; kx<=nk/2; kx++)
+	{
+		c1 = ((kx+1)*kx)/2;
+		
+		for(ky=0; ky<=kx; ky++)
+		{
+			qtok[c1+ky] = kx*nk+ky;
+		}
+	}
+	
+	return(0);
+}
 
+//initialise ksym
+//ksym gives symmetry index for irreducible BZ
 int initksym(int*const ksym , const int nk)
 {
-	//Initialize Symmetryindex for irreducible BZ
 	int kx,ky;
 	
 	for(kx=0; kx <= nk/2; kx++)
@@ -363,10 +464,10 @@ int initksym(int*const ksym , const int nk)
 	return(0);
 }
 
-
+//initialise kmap
+//kmap gives index on irreducible BZ
 int initkmap(int*const*const kmap , const int nk)
 {
-	//Initialize Symmetry k map
 	int kx,ky;
 	int coord;
 	int i,j;
@@ -393,77 +494,11 @@ int initkmap(int*const*const kmap , const int nk)
 }
 
 
-int initqtok(int*const qtok , const int nk)
-{
-	int kx,ky;
-	int c1;
-	
-	for(kx=0; kx<=nk/2; kx++)
-	{
-		c1 = ((kx+1)*kx)/2;
-		
-		for(ky=0; ky<=kx; ky++)
-		{
-			qtok[c1+ky] = kx*nk+ky;
-		}
-	}
-	
-	return(0);
-}
+//----------------------------------------------------
+//calculation of dual self energy - equation of motion
+//----------------------------------------------------
 
-int ParquetReassembly(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** const Gphup, dcomp *** const Gphdown, dcomp *** const Fup, dcomp *** const Fdown, dcomp *** const Pppup, dcomp *** const Pppdown, dcomp *** const Pphup, dcomp *** const Pphdown, dcomp * const Lambdaup, dcomp * const Lambdadown, dcomp * const Gk, const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const qtok, const int* const * const kmap, const int* const * const ksum, const int* const * const kdif)
-{
-	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
-	const int nnk = nk*nk;
-	
-	int i,j,k,l,m;
-	int q1,k1;
-	int s1;
-	int dumk1, dumk2;
-	
-	for(i=0;i<ndistk;i++) //q
-	{
-		for(j=0;j<nnk;j++) //k
-		{
-			k1 = ksum[qtok[i]][j];
-			
-			for(k=0;k<nnk;k++) //k'
-			{
-				dumk1 = (kdif[k][j]);
-				q1 = ktoq[dumk1];
-				s1 = ksym[dumk1];
-				
-				dumk1 = j*nnk+k;
-				dumk2 = (kmap[s1][j])*nnk+kmap[s1][k1];
-				
-				for(l=-nv;l<nv;l++) //v
-				{
-					for(m=-nv;m<nv;m++) //v'
-					{
-						Fup[i][dumk1][l*2*nv+m] = Lambdaup[l*2*nv+m] + Pppup[i][dumk1][l*2*nv+m] + Pphup[i][dumk1][l*2*nv+m] + Pphdown[q1][dumk2][l*2*nv+m];
-						
-						Fdown[i][dumk1][l*2*nv+m] = Lambdadown[l*2*nv+m] + Pppdown[i][dumk1][l*2*nv+m] + Pphdown[i][dumk1][l*2*nv+m] + Pphup[q1][dumk2][l*2*nv+m];
-						
-						
-						Gppup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pppup[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + m])*(Gk[k1*2*nv + l]);
-						
-						Gppdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pppdown[i][dumk1][l*2*nv+m])*(Gk[k*2*nv + l])*(Gk[k1*2*nv + m]);
-						
-						
-						Gphup[i][dumk1][l*2*nv+m] = (Fup[i][dumk1][l*2*nv+m] - Pphup[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + m])*(Gk[k1*2*nv + m]);
-						
-						Gphdown[i][dumk1][l*2*nv+m] = (Fdown[i][dumk1][l*2*nv+m] - Pphdown[i][dumk1][l*2*nv+m])*(Gk[j*2*nv + l])*(Gk[k1*2*nv + m]);
-						
-					}
-				}
-			}
-		}
-	}
-	
-	return(0);
-}
-
-
+//prepare calculation of dual self energy
 int InitSigSummand(dcomp*** const SigSummand, dcomp *** const Fup, dcomp * const Lambdaup, dcomp * const Gk, const int nk , const int nv, const int* const qtok, const int* const * const ksum)
 {
 	const int ndistk = (nk/2 + 1)*(nk/2 + 2)/2;
@@ -476,12 +511,12 @@ int InitSigSummand(dcomp*** const SigSummand, dcomp *** const Fup, dcomp * const
 	
 	Leff += nv*(2*nv+1);
 	
-	//Prepare reordered and dediagonalized Lambda (k-normalization here)
+	//prepare reordered and dediagonalized Lambda (local F) including k-normalization here
 	{
 		
-		for(i=-nv; i<nv;  i++)
+		for(i=-nv; i<nv;  i++) //v
 		{
-			for(j=-nv; j<nv; j++)
+			for(j=-nv; j<nv; j++) //v'
 			{
 				Leff[i*2*nv + j] = Lambdaup[j*2*nv + i]/double(nnk);
 			}
@@ -490,31 +525,35 @@ int InitSigSummand(dcomp*** const SigSummand, dcomp *** const Fup, dcomp * const
 		}
 	}
 	
-	for(i=0; i<ndistk; i++)
+	//initialize SigSummand to zero
+	for(i=0; i<ndistk; i++) //q
 	{
-		for(j=0; j<nnk; j++)
+		for(j=0; j<nnk; j++) //k
 		{
-			for(l=0; l<nv; l++)
+			for(l=0; l<nv; l++) //v
 			{
 				SigSummand[i][j][l] = 0.;
 			}
 		}
 	}
 	
-	for(i=0; i<ndistk; i++)
+	for(i=0; i<ndistk; i++) //q
 	{
+		//q as k index on full BZ
 		qeff = qtok[i];
 		
-		for(j=0; j<nnk; j++)
+		for(j=0; j<nnk; j++) //k
 		{
-			for(k=0; k<nnk; k++)
+			for(k=0; k<nnk; k++) //k'
 			{
+				//k' + q
 				kpq = ksum[qeff][k];
 				
-				for(l=0; l<nv; l++)
+				for(l=0; l<nv; l++) //v
 				{
-					for(m=-nv; m<nv; m++)
+					for(m=-nv; m<nv; m++) //v'
 					{
+						//calculate SigSummand
 						SigSummand[i][j][l] -= ( Fup[i][nnk*j + k][2*l*nv + m] )*Gk[2*nv*k + m]*Gk[2*nv*kpq + m]*( Leff[2*l*nv + m] );
 					}
 					
@@ -524,14 +563,15 @@ int InitSigSummand(dcomp*** const SigSummand, dcomp *** const Fup, dcomp * const
 		}
 	}
 	
+	//release memory
 	Leff -= nv*(2*nv+1);
-	
 	delete Leff;
 	
 	return(0);
 }
 
-
+//calculate dual self energy via equation of motion
+//without Hartree term
 int CalcSigmaDual(dcomp* const Sigmadual, dcomp*** const SigSummand, dcomp * const Gk, const int nk , const int nv, const int* const ktoq, const int* const ksym, const int* const * const kmap, const int* const * const ksum)
 {
 	const int nnk = nk*nk;
@@ -540,26 +580,32 @@ int CalcSigmaDual(dcomp* const Sigmadual, dcomp*** const SigSummand, dcomp * con
 	int s;
 	int kpq;
 	
-	for(j=0; j<nnk; j++)
+	//initialise dual self energy to zero
+	for(j=0; j<nnk; j++) //k
 	{
-		for(l=0; l<nv; l++)
+		for(l=0; l<nv; l++) //v
 		{
 			Sigmadual[2*nv*j + l] = 0.;
 		}
 	}
 	
-	for(i=0; i<nnk; i++)
+	for(i=0; i<nnk; i++) //k
 	{
+		//symmetry index of k
 		s = ksym[i];
+		//k as q index on irreducible BZ
 		qeff = ktoq[i];
 		
-		for(j=0; j<nnk; j++)
+		for(j=0; j<nnk; j++) //k'
 		{
+			//k' as index on irreducible BZ
 			keff = kmap[s][j];
+			//k + k'
 			kpq = ksum[i][j];
 			
-			for(l=0; l<nv; l++)
+			for(l=0; l<nv; l++) //v
 			{
+				//calculation of dual self energy
 				Sigmadual[2*nv*j + l] += SigSummand[qeff][keff][l] * Gk[2*nv*kpq + l];
 			}
 		}
@@ -578,32 +624,33 @@ int CalcSigmaDual(dcomp* const Sigmadual, dcomp*** const SigSummand, dcomp * con
 	return(0);
 }
 
-//calculate the Hartree Fock term for the self energy
+//calculate the Hartree Fock term (is purely local) for the self energy
 int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const Flocup, dcomp * const Flocdown, dcomp * const Sigmadualhf, const int nk, const int nv)
 {
 	const int nnk = nk*nk;
 	const double norm = nnk;    
 	int i, j, k;
 	
-	for(i=-nv; i<nv; i++)
+	//initialise local dual propagator and Hartree term to zero
+	for(i=-nv; i<nv; i++) //v
 	{
 		Gdualloc[i] = 0.;
 		Sigmadualhf[i] = 0.;
 	}
 	
-	//calculate local Gdual
-	for(k=0; k<nnk; k++)
+	//calculate local dual propagator as sum over BZ
+	for(k=0; k<nnk; k++) //k
 	{
-		for(i=-nv; i<nv; i++)
+		for(i=-nv; i<nv; i++) //v
 		{
-			Gdualloc[i] += Gdual[2 * nv*k + i]/norm;
+			Gdualloc[i] += Gdual[2*nv*k + i]/norm;
 		}
 	}
 	
-	//calculate Hartree Fock self energy
-	for(i=-nv; i<nv; i++)
+	//calculate Hartree self energy
+	for(i=-nv; i<nv; i++) //v
 	{
-		for(j=-nv; j<nv; j++)
+		for(j=-nv; j<nv; j++) //v'
 		{
 			Sigmadualhf[i] -= Flocup[2 * i*nv + j] * Gdualloc[j];
 		}
@@ -617,52 +664,83 @@ int CalcSigmaDualHF(dcomp * const Gdual, dcomp * const Gdualloc, dcomp * const F
 class DFParquetParams
 {
 	public:
+	
+	//lattice size
+	
+	//nk - size of DF lattice
+	//nkin - size of DMFT lattice
+	//nv - number of DF Matsubara frequencies
+	//nvin - number of DMFT Matsubara frequencies
 	int nk, nkin, nv, nvin;
+	//nnk - nk*nk
 	int nnk;
+	//number of points in irreducible BZ
 	int ndistk;
 	
 	//one-particle quantities
+	
+	//dual self energy Sigma(k,v)
 	dcomp* Sigmadual;
+	//auxiliary variable for dual sef energy
 	dcomp* Sigmadualold;
+	//resulting DF corrections Sigma_corr(k,v)
 	dcomp* Sigmacor;
+	//Hartree term of dual self energy Sigma_HF(v)
 	dcomp* Sigmadualhf;
+	//bare dual propagator G_0(k,v)
 	dcomp* G0dual; 
+	//dual propagator G(k,v)
 	dcomp* Gdual; 
+	//local propagator of real fermions G_loc(v)
 	dcomp* Gloc;
+	//local propagator of dual fermions G_loc(v)
 	dcomp* Gdualloc;
 	
 	//k-grid quantities
+	
+	//sum of two momenta
 	int ** ksum;
+	//difference of two momenta
 	int ** kdif;
+	//symmetry map on irreducible BZ
 	int ** kmap;
+	//symmetry index for use in kmap
 	int * ksym;
+	//convert k to q index (from full to irreducible BZ)
 	int * ktoq;
+	//convert q to k index (from irreducible to full BZ)
 	int * qtok;
 	
-	//Vertex quantities
+	//vertex quantities
+	
+	//local vertex function F_loc(v,v')
 	dcomp* Flocup;
 	dcomp* Flocdown;
 	
+	//full vertex function F(k,k',q)(v,v')
 	dcomp *** Fup;
 	dcomp *** Fdown;
 	
-	
+	//irreducible vertex functions Gamma_ph(k,k',q)(v,v')
 	dcomp *** Gphup;
 	dcomp *** Gphdown;
 	
+	//reducible vertex functions Phi_ph(k,k',q)(v,v')
 	dcomp *** Pphup;
 	dcomp *** Pphdown;
 	
-	
+	//irreducible vertex functions Gamma_pp(k,k',q)(v,v')
 	dcomp *** Gppup;
 	dcomp *** Gppdown;
 	
+	//reducible vertex functions Phi_pp(k,k',q)(v,v')
 	dcomp *** Pppup;
 	dcomp *** Pppdown;
 	
-	//little helper
+	//little helper for calculation of dual self energy
 	dcomp*** SigSummand;
 	
+	//constructor
 	DFParquetParams( const int innk , const int innv , const int innkin , const int innvin )
 	{
 		nk = innk;
@@ -964,8 +1042,11 @@ class DFParquetParams
 		return(0);
 	};
 	
+	//read in DMFT results
 	int ReadDMFT()
 	{
+		//read in local vertex function F
+		
 		int i, j;
 		
 		dcomp* Fupin = new dcomp [4*nvin*nvin];
@@ -992,6 +1073,8 @@ class DFParquetParams
 		delete Fupin;
 		delete Fdownin;
 		
+		//read in local Green's function
+		
 		dcomp* Gin = new dcomp [2*nvin];
 		
 		readbin ("G1" , Gin , 2*nvin );
@@ -1004,6 +1087,8 @@ class DFParquetParams
 		Gin -= nvin;
 		
 		delete Gin;
+		
+		//read in bare dual Green's function
 		
 		readbin ("G0dual" , G0dual-nv , 2*nv*nnk );
 		
@@ -1018,10 +1103,12 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//reset vertex functions
 	int ResetVertex()
 	{
 		int i,j,k;
 		
+		//initialise reducible Phis to zero
 		for(i=0; i<ndistk; i++)
 		{
 			for(j=0; j<nnk*nnk; j++)
@@ -1039,26 +1126,13 @@ class DFParquetParams
 			}
 		}
 		
+		//call the parquet equation to initialise F and Gammas to local F
 		this->Parquetiter();
 		
 		return(0);
 	}
 	
-	
-	int LadderDualSigma()
-	{
-		int i,j;
-		for(i=0; i< nnk; i++)
-		{
-			for(j=-nv; j< nv; j++)
-			{
-				Sigmadual[i*2*nv + j] = Sigmadual[i*2*nv + j] / (1. -  Sigmadual[i*2*nv + j] * Gloc[j]);
-			}
-		}
-		
-		return(0);
-	}
-	
+	//set self energy corrections equal to dual self energy
 	int DualToRealSig()
 	{
 		int i,j;
@@ -1073,6 +1147,7 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//use mapping to calculate self energy corrections out of dual self energy
 	int MappedDualToRealSig()
 	{
 		int i,j;
@@ -1087,6 +1162,7 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//choose which way self energy corrections are calculated
 	int FlexDualToRealSig(int mode)
 	{
 		switch(mode)
@@ -1104,6 +1180,7 @@ class DFParquetParams
 		return (0);
 	}
 	
+	//set dual self energy equal to self energy corrections
 	int RealToDualSig()
 	{
 		int i,j;
@@ -1118,6 +1195,7 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//use mapping to calculate dual self energy out of self energy corrections
 	int MappedRealToDualSig()
 	{
 		int i,j;
@@ -1132,6 +1210,7 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//choose which way dual self energy is calculated
 	int FlexRealToDualSig(int mode)
 	{
 		switch(mode)
@@ -1149,6 +1228,7 @@ class DFParquetParams
 		return (0);
 	}
 	
+	//calculate Green's function out of dual self energy via Dyson equation
 	int UpdateGdual()
 	{
 		int i,j;
@@ -1156,6 +1236,7 @@ class DFParquetParams
 		{
 			for(j=-nv; j< nv; j++)
 			{
+				//Dyson equation
 				Gdual[i*2*nv + j] = G0dual[i*2*nv + j]/ (1. -  Sigmadual[i*2*nv + j] * G0dual[i*2*nv + j]);
 			}
 		}
@@ -1163,6 +1244,7 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//read in self energy corrections
 	int ReadSigCors()
 	{
 		readbin ("SigmaCork" , Sigmacor-nv , 2*nv*nk*nk );
@@ -1170,11 +1252,13 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//write self energy corrections
 	void WriteSigCors()
 	{
 		writebin ("SigmaCork" , Sigmacor-nv , 2*nv*nnk );
 	}
 	
+	//read in dual self energy
 	int ReadDualSig()
 	{
 		readbin("DualSig", Sigmadual-nv, 2*nv*nnk);
@@ -1182,26 +1266,32 @@ class DFParquetParams
 		return(0);
 	}
 	
+	//write dual self energy
 	void WriteDualSig()
 	{
 		writebin ("DualSig" , Sigmadual-nv , 2*nv*nnk );
 	}
 	
+	//write dual Green's function
 	void WriteGdual()
 	{
 		writebin ("Gdual" , Gdual-nv , 2*nv*nnk );
 	}
 	
+	//call Bethe-Salpeter equations
 	int BSiter()
 	{		
 		int retval = 0;
 		
+		//for ph channel
 		retval += BSph( Pphup, Pphdown, Gphup, Gphdown, Fup, Fdown , nk , nv);
+		//for pp channel
 		retval += BSpp( Pppup, Pppdown, Gppup, Gppdown, Fup, Fdown , nk , nv, ktoq, ksym, qtok, kmap, ksum, kdif);
 		
 		return (retval);
 	}
 	
+	//call Bethe-Salepter equation only for ph channel
 	int BSiterph()
 	{
 		int retval = 0;
@@ -1211,6 +1301,7 @@ class DFParquetParams
 		return (retval);
 	}
 	
+	//call Bethe-Salepter equation only for pp channel
 	int BSiterpp()
 	{
 		int retval = 0;
@@ -1220,38 +1311,44 @@ class DFParquetParams
 		return (retval);
 	}
 	
-	
+	//call parquet equation
 	int Parquetiter()
 	{
-		
 		ParquetReassembly(Gppup, Gppdown, Gphup, Gphdown, Fup, Fdown, Pppup, Pppdown, Pphup, Pphdown, Flocup, Flocdown, Gdual, nk , nv, ktoq, ksym, qtok, kmap, ksum, kdif);
 		return(0);
 	}
 	
+	//calculate dual self energy via equation of motion
 	int SigCalc()
 	{
 		
 		int i,k;
 		
+		//initialise the auxiliary quantity SigSummand
 		InitSigSummand(SigSummand, Fup, Flocup, Gdual, nk , nv, qtok, ksum);	
 		dcomp* dummy;
 		
+		//store old dual self energy
 		dummy = Sigmadualold;
 		Sigmadualold = Sigmadual;
 		Sigmadual = dummy;
 		
+		//calculate dual self energy without Hartree term
 		CalcSigmaDual(Sigmadual, SigSummand, Gdual, nk , nv, ktoq, ksym, kmap, ksum);
 		
-		//add Hartree-Fock term
+		//calculate Hartree term
 		CalcSigmaDualHF(Gdual, Gdualloc, Flocup, Flocdown, Sigmadualhf, nk, nv);
 		
-		writebin("Sigmadualhf", Sigmadualhf-nv, 2*nv);
+		//write Hartree term
+		//writebin("Sigmadualhf", Sigmadualhf-nv, 2*nv);
 		
-		writebin("Gdualloc", Gdualloc-nv, 2*nv);
-			
-		for(k=0; k<nnk; k++)
+		//write local dual propagator
+		//writebin("Gdualloc", Gdualloc-nv, 2*nv);
+		
+		//add Hartree term to dual self energy
+		for(k=0; k<nnk; k++) //k
 		{
-			for(i=-nv; i<nv; i++)
+			for(i=-nv; i<nv; i++) //v
 			{
 				Sigmadual[2*nv*k+i]=Sigmadualhf[i]+Sigmadual[2*nv*k+i];
 			}
@@ -1259,10 +1356,38 @@ class DFParquetParams
 		
 		return(0);
 	}
-	
-	int WritingTest()
-	{
-		writebin("qtok", qtok, ndistk);
-		return(0);	
-	}
 };
+
+/* not used in the code so far
+
+int SetupQK(int ** const QK , const int nk)
+{
+ 	const int nnk = nk*nk;
+ 	const int ndistk = (nk/2 + 1)*(nk/2+2)/2;
+	
+	int i,j,k,l;
+	int ca, cb;
+	int dumi, dumj;
+	
+	for(i=0; i<=nk/2;  i++)
+	{
+		for(j=0; j<=i;  j++)
+		{
+			ca = RC (i,j);
+			for(k=0; k < nk;  k++)
+			{
+				dumi = ((i+k+nk/2)%nk)*nk;
+				cb = k * nk;
+				for(l=0; l < nk;  l++)
+				{
+					dumj = ((j+l+nk/2)%nk);
+					
+					QK[ca][cb+l] = dumi + dumj;
+				}
+			}
+		}
+	}
+	
+	
+	return (0);
+} */
