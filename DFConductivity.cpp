@@ -1,5 +1,7 @@
-// Prepare velocity-x-operator for nk*nk k-mesh
-// Nearest neighbour-hopping square lattice is hardcoded so far
+//class for calculating the current-current correlation function
+
+//prepare velocity-x-operator for nk*nk k-mesh
+//nearest neighbour-hopping square lattice is hardcoded so far
 template <typename numbertype>
 int calcvx(const int nk, numbertype* const vx)
 {
@@ -12,6 +14,7 @@ int calcvx(const int nk, numbertype* const vx)
 	for(i = 0; i < nk; i++)
 	{
 		v = 2. * t * sin( i * pistep - pi );
+		
 		for(j = 0; j < nk; j++)
 		{
 			*(vx + i*nk + j) = v;
@@ -21,11 +24,10 @@ int calcvx(const int nk, numbertype* const vx)
 	return(0);
 }
 
-// Prepare fermionic Matsubara frequencies
+//prepare fermionic Matsubara frequencies
 template <typename cpltype, typename fltype>
 int PrecalciNu( cpltype* const iNu , const fltype beta, int nv)
-//
-// precalculates a vector of Matsubara frequencies for use in some functions.
+//precalculates a vector of Matsubara frequencies for use in some functions
 {
 	int i;
 	fltype pibeta = acos( fltype(-1.))/beta;
@@ -38,10 +40,10 @@ int PrecalciNu( cpltype* const iNu , const fltype beta, int nv)
 	return (0);
 }
 
-// calculate Bubble-contribution to conductivity from Kubo's formula
-// Use Gk (already dressed by non-local Sigma-corrections), Matsubara frequencies and x-velocities vx as input
-// Correct for finite frequency box by subtracting the trivial propagators 1/(iv * (iv + iw)) which give 0.25 for w = 0 and 0 otherwise when summed over frequencies
-// write result to ohm (conductivity times omega!)
+//calculate bubble contribution
+//use Gk (already dressed by non-local self energy corrections), Matsubara frequencies and x-velocities vx as input
+//correct for finite frequency box by subtracting the trivial propagators 1/(iv * (iv + iw)) which give 0.25 for w = 0 and 0 otherwise when summed over frequencies
+//write result to ohm
 template <typename numbertype , typename fltype>
 int calcohm(const numbertype* const Gk, const numbertype* const Matsus, const fltype* const vx, const int nv2, const int nw2, const int nk, const fltype beta, numbertype* const ohm )
 {
@@ -52,6 +54,8 @@ int calcohm(const numbertype* const Gk, const numbertype* const Matsus, const fl
 	const fltype flnorm = norm;
 	
 	fltype fldummy, zeroohm;
+	
+	//auxiliary term
 	
 	zeroohm = 0.;
 	
@@ -69,34 +73,44 @@ int calcohm(const numbertype* const Gk, const numbertype* const Matsus, const fl
 	
 	zeroohm = zeroohm/flnorm;
 	
+	//calculate bubble
 	
-	for(k = 0; k < nw2+1; k++)
+	for(k = 0; k < nw2+1; k++) //w
 	{
+		//initialise bubble to zero
 		*(ohm + k) = 0.;
 		
-		//dummy is a primitive anti-absorbtion measure for numerical summation
-		for(j = 0; j < nk; j++)
+		//dummy is a primitive anti-absorption measure for numerical summation
+		for(j = 0; j < nk; j++) //k_x
 		{
-			
 			dummy = 0.;
-			for(l = 0; l < nk; l++)
+			
+			for(l = 0; l < nk; l++) //k_y
 			{
-				for(i = -nv2; i < nv2-k; i++)
+				for(i = -nv2; i < nv2-k; i++) //v
 				{
+					//G(k,v)
 					duma = *(Gk + (j*nk + l)*2*nv2 + i);
+					//G(k,v+w)
 					dumb = *(Gk + (j*nk + l)*2*nv2 + i+k);
-					dumg = 1./(Matsus[i] * Matsus[i+k]); 
+					//dummy propagator
+					dumg = 1./(Matsus[i] * Matsus[i+k]);
+					
+					//subtract dummy propagator in sum
 					dummy += ( duma * dumb - dumg ) * *(vx + j*nk + l) * *(vx + j*nk + l);
 				}
 				
 			}
+			
 			*(ohm + k) += dummy;
 		}
 		
+		//normalization
 		*(ohm + k) = *(ohm + k) / (flnorm);
 		*(ohm + k) = *(ohm + k) / (beta*beta);
 	}
 	
+	//add auxiliary term to account for subtraction of dummy propagator in sum
 	*(ohm) += zeroohm;
 	
 	for(k = 1; k < nw2+1; k++)
@@ -109,10 +123,10 @@ int calcohm(const numbertype* const Gk, const numbertype* const Matsus, const fl
 }
 
 
-// calculate Vertex-contribution to conductivity from Kubo's formula
-// Use Fq, Gk (already dressed by non-local Sigma-corrections), Matsubara frequencies and x-velocities vx as input
-// Correct for finite frequency box by subtracting the trivial propagators C * 1/(iv * (iv + iw))^2 which give w-constant contributions per kk' set
-// write result to ohm (conductivity times omega!)
+//calculate vertex corrections
+//use Fq, Gk (already dressed by non-local self energy corrections), Matsubara frequencies and x-velocities vx as input
+//correct for finite frequency box by subtracting the trivial propagators C * 1/(iv * (iv + iw))^2 which give w-constant contributions per kk' set
+//write result to ohm
 template <typename numbertype , typename fltype>
 int calcconohm(const numbertype* const* const Fqdown, const numbertype* const Gk, const numbertype* const Matsus, const fltype* const vx, const int nv2, const int nw2, const int nk, const fltype beta, numbertype* const ohm )
 {
@@ -135,31 +149,37 @@ int calcconohm(const numbertype* const* const Fqdown, const numbertype* const Gk
 		*(wref+i) = fldummy / (i*i);
 	}
 	
-	for(i = 0; i < nw2 + 1; i++)
+	for(i = 0; i < nw2 + 1; i++) //omega
 	{
 		*(ohm + i) = 0.;
-		for(k = 0; k < norm; k++)
+		
+		for(k = 0; k < norm; k++) //k
 		{
 			dummya = 0.;
 			
-			for(kp = 0; kp < norm; kp++)
+			for(kp = 0; kp < norm; kp++) //k'
 			{
 				dummyb = 0.;
 				
 				Casym = Fqdown[k*norm + kp][(nv2-1)*(2*nv2)-nv2];
 				
-				for(v = -nv2; v < nv2-i; v++)
+				for(v = -nv2; v < nv2-i; v++) //v
 				{
+					//dummy propagator for substraction
 					dumg = 1./(Matsus[v] * Matsus[i+v]); 
 					dumg = dumg*dumg;
+					//G(k,v)*G(k',v)*G(k',v + w)*G(k,v + w)
 					dumg2 = Gk[k*2*nv2 + v] * Gk[kp*2*nv2 + v] * Gk[kp*2*nv2 + (v+i)] * Gk[k*2*nv2 + (v+i)];
 					
+					//calculate vertex corrections with substraction of dummy term
 					dummyb += ( (Fqdown[k*norm + kp][(v)*(2*nv2+1)+i] * dumg2) - (Casym * dumg) ) * vx[k] * vx[kp];
 				}
 				
+				//add dummy term again
 				dummya += (dummyb/(beta*beta) + Casym * wref[i] * vx[k] * vx[kp]);
 			}
 			
+			//normalization
 			*(ohm + i) += dummya/(flnorm*flnorm);
 		}
 	}
@@ -176,24 +196,39 @@ int calcconohm(const numbertype* const* const Fqdown, const numbertype* const Gk
 class ConductivityObject
 {
 	public:
+	
+	//parameters
+	
+	//nk - lattice size
+	//nv - number of Matsubara frequencies
+	//nvin - number of DMFT Matsubara frequencies
 	int nk, nv, nvin;
 	double beta,mu;
+	//velocity operator in x-direction
 	double* vx;
+	//dispersion relation
 	double* Ek;
 	
 	//one-particle quantities
+	
+	//local self energy
 	dcomp* Sigmaloc;
+	//self energy corrections
 	dcomp* Sigmacor;
+	//Matsubara frequencies
 	dcomp* Matsus;
+	//lattice Green's function
 	dcomp* Gk;
 	
-	//conductivities
+	//bubble current-current correlation function
 	dcomp* ohmbubble;
+	//vertex corrections to current-current correlation function
 	dcomp* ohmvertex;
 	
-	//Vertex quantities
+	//vertex quantities
 	dcomp ** Fdown;
 	
+	//constructor using parquet class
 	template <class Parquet>
 	ConductivityObject(Parquet MyParquet, double inbeta, double inmu)
 	{
@@ -263,7 +298,7 @@ class ConductivityObject
 		readbin ("Sigma", Sigmaloc-nvin, 2*nvin);
 		
 		calcGreal( Sigmacor, Sigmaloc, Ek, nv, nk, mu, beta, Gk);
-// 		cout << "Greal calculated" << endl;
+		
 		return(0);
 	}
 	
@@ -276,7 +311,6 @@ class ConductivityObject
 	int CalcCondVertex()
 	{
 		calcconohm(Fdown, Gk, Matsus, vx, nv, nv, nk, beta, ohmvertex );
-		cout << "Vertex calculated" << endl;
 		return(0);
 	}
 	
