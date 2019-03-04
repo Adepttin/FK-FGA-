@@ -28,7 +28,7 @@ nv = 20
 nvDMFT = 100
 #number of iterations in the self consistent DMFT cycle
 DMFTiter = 40
-n#umber of Bethe-Salpeter and parquet iterations in DFParquet
+#number of Bethe-Salpeter and parquet iterations in DFParquet
 DFiter = 7
 #number of iterations for the whole DF parquet calculation
 iteration = 5
