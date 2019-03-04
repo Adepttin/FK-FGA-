@@ -47,7 +47,7 @@ dumsigdual.tofile("DualSig")
 for i in range(0,iteration):
 
 	print("============================================")
-	print("Starting DF iteration " + str(i+1) + "/" + str(iteration))
+	print("Starting DF  parquet iteration " + str(i+1) + "/" + str(iteration))
 	print("beta = " + str(beta))
 	print("============================================")
 
