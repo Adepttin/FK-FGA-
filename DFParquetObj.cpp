@@ -282,7 +282,7 @@ int ParquetReassembly(dcomp *** const Gppup, dcomp *** const Gppdown, dcomp *** 
 }
 
 //--------------------------------------------------------------------
-//initialisation of k quantities, inclduing some symmetry maps for BZ
+//initialisation of k quantities, including some symmetry maps for BZ
 //--------------------------------------------------------------------
 
 //initialise ksum
