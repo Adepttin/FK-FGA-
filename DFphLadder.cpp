@@ -1,42 +1,37 @@
 using namespace std;
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <fstream>
-// #include <iostream>
-// #include <assert.h>
-// #include <cmath>
-// #include <complex>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <fstream>
+//#include <iostream>
+//#include <assert.h>
+//#include <cmath>
+//#include <complex>
 
-// #include "routines.cpp"
+//#include "routines.cpp"
 #include "DFphLadderObj.cpp"
-// #include "DFConductivity.cpp"
-// Self contained DF based on DMFT results
 
+//DF ladder calculation based on DMFT results
 
 int main(int argc, char* argv[])
 {
-	const double beta = atof(argv[1]); // Inverse Temperature
-	const double U = atof(argv[2]);
-	double mu = atof(argv[3]);
-	const double t = 0.25;
-	double Ef = atof(argv[4]);
-	double p1 = atof(argv[5]);
-	const int nk = atoi(argv[6]); // number of k-values per dimension
-	const int nkin = atoi(argv[7]); // number of k-values per dimension in input
-	const int nv = atoi(argv[8]); //Number of matsubara frequencies used
-	const int nvin = atoi(argv[9]); //Number of matsubara frequencies in input
-	const double relconv = atoi(argv[10]); //desired relative convergence for DF-corrections
-	const int maxit = atoi(argv[11]); //maximum number of iterative DF loops
+	//read in parameters
+	const double beta = atof(argv[1]); //inverse temperature
+	const double U = atof(argv[2]); //interaction strength
+	double mu = atof(argv[3]); //chemical potential
+	const double t = 0.25; //hopping parameter
+	double p1 = atof(argv[4]); //occupation of localized f-electrons
+	const int nk = atoi(argv[5]); //number of k-values per dimension
+	const int nkin = atoi(argv[6]); //number of k-values per dimension in DMFT input
+	const int nv = atoi(argv[7]); //number of Matsubara frequencies used
+	const int nvin = atoi(argv[8]); //number of Matsubara frequencies in DMFT input
 	
 	int i;
 	
-//  	int i,j,k,l;
-	
-	cout << "Blubb" <<  endl;
-	DFphParams LadderObj = DFphParams (nk , nv , nkin , nvin);
-	
+	//create instance of class DFppParams
+	DFphParams LadderObj = DFphParams (nk, nv, nkin, nvin);
 	cout << "Object built" <<  endl;
 	
+	//initialise quantities and allocate memory
 	cout << "Initialising 1P" <<  endl;
 	LadderObj.InitialiseOneParticle();
 	cout << "Initialising Kuantities" <<  endl;
@@ -44,59 +39,52 @@ int main(int argc, char* argv[])
 	cout << "Initialising V" <<  endl;
 	LadderObj.InitialiseVertexStorage();
 	
+	//read in DMFT results
 	cout << "Reading DMFT" <<  endl;
 	LadderObj.ReadDMFT();
 
-//reading Sigmadual and updating Gdual
+	//read in dual self energy and update dual propagator
 	LadderObj.ReadDualSig();
 	LadderObj.UpdateGdual();
 	
-	for(i = 0; i < maxit; i++)
-	{
-		//BS only for ph
-		cout << "BS Iteration " << i << "/" << maxit << endl;
-		LadderObj.LadderCalc();
-		//Parquet and calculation of Sigma
-		cout << "Sigma calculation" << endl;
-		LadderObj.SigCalc();
-		LadderObj.UpdateGdual();
-	}
+	//calculate ph ladder
+	cout << "Calculate ph ladder" << endl;
+	LadderObj.LadderCalc();
 	
-	cout << "Update Gdual" <<  endl;
-	//ParqObj.SigCalc();
+	//update dual self energy and propagator
+	cout << "Calculate Sigma" << endl;
+	LadderObj.SigCalc();
 	LadderObj.UpdateGdual();
 	
+	//write self energy corrections, dual self energy and propagator
 	cout << "Writing Sdual" <<  endl;
 	LadderObj.FlexDualToRealSig(0);
 	LadderObj.WriteSigCors();
 	LadderObj.WriteDualSig();
 	LadderObj.WriteGdual();
 	
-    ConductivityObject CondObj = ConductivityObject(LadderObj, beta, mu);
-	cout << "Initialise Conductivity storage" <<  endl;
+	//calculate current-current correlation function
+	
+	//create instance of class ConductivityObject	
+	ConductivityObject CondObj = ConductivityObject(LadderObj, beta, mu);
+	
+	//initialise quantities and allocate memory
 	CondObj.InitialiseStorage();
 	CondObj.InitialiseQuantities();
 	
-	cout << "Calculate Bubble" <<  endl;
+	//calculate bubble
 	CondObj.CalcCondBubble();
-	cout << "Calculate ConnOhm" <<  endl;
+	
+	//calculate vertex corrections
 	CondObj.CalcCondVertex();
 	
+	//write bubble and vertex corrections
 	CondObj.WriteConductivities();
 	
+	//release memory
 	CondObj.DeleteStorage();
-// 	ConductivityObject CondObj = ConductivityObject(ParqObj, beta, mu);
-// 	CondObj.InitialiseStorage();
-// 	CondObj.InitialiseQuantities();
-// 	
-// 	CondObj.CalcCondBubble();
-// 	CondObj.CalcCondVertex();
-// 	
-// 	CondObj.WriteConductivities();
-// 	
-// 	CondObj.DeleteStorage();
 	
-	
+	//release memory
 	cout << "Deleting Khelper" <<  endl;
 	LadderObj.DeleteKQuantities();
 	cout << "Writing 1P quantities" <<  endl;
@@ -104,6 +92,7 @@ int main(int argc, char* argv[])
 	cout << "Deleting Vertices" <<  endl;
 	LadderObj.DeleteVertexStorage();
 	
+	//write parameters to txt file
 	ofstream outfile;
 	//Output-scope
 	{
@@ -112,13 +101,11 @@ int main(int argc, char* argv[])
 	outfile << "U = " << U  << "\n" ;
 	outfile << "mu = " << mu  << "\n" ;
 	outfile << "t = " << t  << "\n" ;
-	outfile << "Ef = " << Ef  << "\n" ;
 	outfile << "p1 = " << p1  << "\n" ;
 	outfile << "nk = " << nk  << "\n" ;
 	outfile << "nv = " << nv  << "\n" ;
 	outfile.close();
 	}
-	
-	
+		
 	return 0;
 }
