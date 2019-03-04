@@ -672,7 +672,7 @@ class DFParquetParams
 	//nv - number of DF Matsubara frequencies
 	//nvin - number of DMFT Matsubara frequencies
 	int nk, nkin, nv, nvin;
-	//nnk - nk*nk
+	//nnk = nk*nk
 	int nnk;
 	//number of points in irreducible BZ
 	int ndistk;
@@ -681,7 +681,7 @@ class DFParquetParams
 	
 	//dual self energy Sigma(k,v)
 	dcomp* Sigmadual;
-	//auxiliary variable for dual sef energy
+	//auxiliary variable for dual self energy
 	dcomp* Sigmadualold;
 	//resulting DF corrections Sigma_corr(k,v)
 	dcomp* Sigmacor;
