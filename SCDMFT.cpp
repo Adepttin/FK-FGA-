@@ -8,12 +8,11 @@ using namespace std;
 #include <complex>
 #include "routines.cpp"
 
-// Self contained DMFT based on DF Sigma correction results
+//Self contained DMFT for the Falicov-Kimball model based on DF self energy correction results
 
 template <typename cpltype, typename fltype>
 int PrecalciNu( cpltype* const iNu , const fltype beta, int nv)
-//
-// precalculates a vector of Matsubara frequencies for use in some functions.
+//precalculates a vector iNu of length nv of fermionic Matsubara frequencies for use in some functions
 {
 	int i;
 	fltype pibeta = acos( fltype(-1.))/beta;
@@ -29,38 +28,51 @@ int PrecalciNu( cpltype* const iNu , const fltype beta, int nv)
 
 int main(int argc, char* argv[])
 {
-	const double beta = atof(argv[1]); // Inverse Temperature
-	const double U = atof(argv[2]);
-	double mu = atof(argv[3]);
-	const double t = 0.25;
-	double Ef = atof(argv[4]);
-	double p1 = atof(argv[5]);
-	const int nk = atoi(argv[6]); // number of k-values per dimension
-	const int nkin = atoi(argv[7]); // number of k-values per dimension in sigma-input
-	const int nv = atoi(argv[8]); //Number of matsubara frequencies used
-	const int nvin = atoi(argv[9]); //Number of matsubara frequencies in sigma-input
-	const int niter = atoi(argv[10]); //Number of DMFT iterations (Usually ~100 is absolutely sufficient and cheap)
+	//read in parameters
+	const double beta = atof(argv[1]); //inverse temperature
+	const double U = atof(argv[2]); //interaction strength
+	double mu = atof(argv[3]); //chemical potential
+	const double t = 0.25; //hopping parameter
+	double p1 = atof(argv[4]); //occupation of localized f-electrons
+	const int nk = atoi(argv[5]); //number of k-values per dimension
+	const int nkin = atoi(argv[6]); //number of k-values per dimension for DF calculation
+	const int nv = atoi(argv[7]); //number of Matsubara frequencies used
+	const int nvin = atoi(argv[8]); //number of Matsubara frequencies for DF calculation
+	const int niter = atoi(argv[9]); //number of DMFT iterations (Usually ~100 is absolutely sufficient and cheap)
 	
+	
+	//loop variables
  	int i,j,k,l;
 	int iin,jin;
 	
-	//Initialisation of DMFT-Variables:
-	dcomp* const MatsuSigma = new dcomp [nv]; 
-	dcomp* const MatsuDelta = new dcomp [nv]; 
-	dcomp* const MatsuGloc = new dcomp [nv]; 
+	
+	//Initialisation of DMFT-Variables (only positive Matsubara frequencies):
+	
+	//self energy
+	dcomp* const MatsuSigma = new dcomp [nv];
+	//hybridisation function
+	dcomp* const MatsuDelta = new dcomp [nv];
+	//local Green's function
+	dcomp* const MatsuGloc = new dcomp [nv];
+	//free Green's function
 	dcomp* const MatsuG0 = new dcomp [nv]; 
+	//Matsubara frequencies
 	dcomp* const iNu = new dcomp [nv]; 
 	
-	dcomp* SigmaCorIn = new dcomp [2*nvin*nkin*nkin]; 
+	//self energy correction (lattice and frequency size of DF calculation, including negative frequencies)
+	dcomp* SigmaCorIn = new dcomp [2*nvin*nkin*nkin];
+	//self energy correction (lattice and frequency size of DMFT calculation)
 	dcomp* SigmaCor = new dcomp [nv*nk*nk]; 
 	
-	readbin ("SigmaCork" , SigmaCorIn , 2*nvin*nkin*nkin );
 	
-	SigmaCorIn += nvin; // set natural position of Sigma correction input.
+	//read in self energy corrections
+	
+	readbin("SigmaCork" , SigmaCorIn , 2*nvin*nkin*nkin );
+	SigmaCorIn += nvin; //set natural position of Sigma correction input
 	{
 		const double coordtrans = double(nkin)/double(nk);
 		double wi, wj;
-		
+
 		for(k=0; k<nvin; k++)
 		{
 			for(i = 0; i < nk; i++)
@@ -75,6 +87,7 @@ int main(int argc, char* argv[])
 				duma = SigmaCorIn + k + iin*nkin*2*nvin;
 				dumb = SigmaCorIn + k + ((iin+1)%nkin)*nkin*2*nvin;
 				
+				//j - loop over (DMFT) lattice in other dimension
 				for(j = 0; j < nk; j++)
 				{
 					wj = coordtrans*j;
@@ -100,30 +113,20 @@ int main(int argc, char* argv[])
 	cout << "reading of correction data done" << endl;
 	
 	
-	double* Epsilons = new double [nk*nk]; // kinetic energies
+	//calculate kinetic energies	
+	double* Epsilons = new double [nk*nk];
+	calcEk(nk, Epsilons);
 	
-	{
-		double pi = acos( (-1.));
-		double pistep = 2.*pi / nk;
-		double epsa;
-		
-		for(i=0;i<nk;i++)
-		{
-			epsa = cos(i*pistep - pi);
-			
-			for(j=0;j<nk;j++)
-			{
-				*(Epsilons + i*nk + j) = -2. * t * (epsa + cos(j*pistep - pi));
-			}
-		}
-	}
-	
+	//calculate Matsubara frequencies
 	i = PrecalciNu(iNu , beta , nv);
 	
-	for (i = 0; i<nv; i++) { MatsuSigma[i] = dcomp (p1*U, 0.);}  //Starting guess for Sigmaimag
+	//starting guess for Sigmaimag
+	for (i = 0; i<nv; i++) { MatsuSigma[i] = dcomp (p1*U, 0.);}  
+	
+	
+	//self consistent DMFT cycle
 	
 	cout << "starting DMFT" << endl;
-	
 	{
 		dcomp Gdum;
 		dcomp dummy;
@@ -132,14 +135,18 @@ int main(int argc, char* argv[])
 		double pU = p1 * U;
 		double Up = U - pU;
 		
+		
 		for (i = 0; i< niter; i++)
 		{
 			for (j = 0; j < nv; j++)
 			{
 				Gdum = 0.;
+				//denominator of full lattice Green's function
 				dummy = *(iNu + j) + mu - *(MatsuSigma+j);
+				//self energy corrections
 				dumpoint = SigmaCor + j*nk*nk;
 				
+				//calculation of local Green's function
 				for (k = 0; k < nk; k++)
 				{
 					dumsum = 0.;
@@ -149,44 +156,53 @@ int main(int argc, char* argv[])
 					}
 					Gdum += dumsum;
 				}
+				
 				*(MatsuGloc + j) = Gdum/double(nk*nk);
+				//calculation of free Green's function - Dyson equation
 				*(MatsuG0 + j) = *(MatsuGloc + j) / (1. + *(MatsuGloc + j) * (*(MatsuSigma+j)) ) ;
+				//calculation of new self energy
 				*(MatsuSigma+j) =  pU / (1. - Up * (*(MatsuG0 + j) ) ) ;
 			}
 		}
 	}
 	
 	
+	//calculation of occupation of mobile c electrons via sum over real part of local Green's function
 	double occu = 0.;
 	for (i = 0; i<nv; i++) 
 	{ 
 		occu += real(MatsuGloc[i]); 
 	}
+	occu = 2. * occu / beta + 0.5;
+	
+	
+	//write all output quantities
 	
 	cout << "DMFT done, writing Output" <<  endl;
-	occu = 2. * occu / beta + 0.5;
 	cout << "Occupation: " << occu << endl;
 	
 	ofstream outfile;
 	//Output-scope
+	//local Green's function as txt file
 	{
 	outfile.open("Gloc.txt" , ios::trunc );
 	for (i = 0; i < nv; i++){
 		outfile << imag(*(iNu + i)) << "   " << real(*(MatsuGloc + i)) << "     " << imag(*(MatsuGloc + i)) << "\n" ;
 	}
 	outfile.close();
+	//self energy as txt file
 	outfile.open("DMFTSigma.txt" , ios::trunc );
 	for (i = 0; i < nv; i++){
 		outfile << imag(*(iNu + i)) << "   " << real(*(MatsuSigma + i)) << "     " << imag(*(MatsuSigma + i)) << "\n" ;
 	}
 	outfile.close();
 	
+	//parameters as txt file
 	outfile.open("Params.txt" , ios::trunc );
 	outfile << "beta/ T = " << beta << " / " << 1. / beta << "\n" ;
 	outfile << "U = " << U  << "\n" ;
 	outfile << "mu = " << mu  << "\n" ;
 	outfile << "t = " << t  << "\n" ;
-	outfile << "Ef = " << Ef  << "\n" ;
 	outfile << "p1 = " << p1  << "\n" ;
 	outfile << "nk = " << nk  << "\n" ;
 	outfile << "nv = " << nv  << "\n" ;
@@ -194,7 +210,7 @@ int main(int argc, char* argv[])
 	outfile.close();
 	}
 	
-	
+	//calculate local vertex function F
 	dcomp* F = new dcomp[nv * nv * 4];
 	F += nv * (2*nv+1);
 	
@@ -215,10 +231,9 @@ int main(int argc, char* argv[])
             }
 	}
 	Matsua = Matsua - nv;
-	writebin ("a" , Matsua , 2*nv);
 	delete Matsua;
 	
-	
+	//write local vertex function F as txt file
 	outfile.open("FlocUp.txt" , ios::trunc );
 	for (i = -nv; i < nv; i++){
             for (j = -nv; j < nv; j++){
@@ -230,11 +245,13 @@ int main(int argc, char* argv[])
 	
 	F -= nv * (2*nv+1);
 	
+	//write local vertex function as binary files
 	writebin ("LambdaUp" , F , 4*nv*nv );
 	writebin ("LambdaDown" , F , 4*nv*nv );
 	
 	delete F;
 	
+	//local Green's function and self energy for positive AND negative Matsubara frequencies
 	dcomp* SuperG = new dcomp [2 * nv]; 
 	SuperG = SuperG + nv;
 	dcomp* SuperSigma = new dcomp [2 * nv]; 
@@ -249,9 +266,11 @@ int main(int argc, char* argv[])
 		SuperSigma[-i-1] = conj(SuperSigma[i]);
 	}
 	
+	
 	//Prepare bare dual propagator
 	
-	double* inEpsilons = new double [nkin*nkin]; // kinetic energies
+	// kinetic energies for DF lattice size
+	double* inEpsilons = new double [nkin*nkin];
 	
 	{
 		double pi = acos( (-1.));
@@ -292,6 +311,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	
+	//write bare dual Green's function as binary file
 	Gdual -= nvin;
 	writebin ("G0dual" , Gdual , 2*nvin*nkin*nkin );
 	cout << nvin << " " << nkin*nkin << endl;
@@ -300,11 +320,13 @@ int main(int argc, char* argv[])
 	SuperG = SuperG - nv;
 	SuperSigma = SuperSigma - nv;
 	
+	//write local Green's function and self energy as binary files
 	writebin ("G1" , SuperG , 2*nv );
 	writebin ("Sigma" , SuperSigma , 2*nv );
 	
+	//release memory
 	
-	SigmaCorIn -= nvin; // reset natural position of Sigma correction input.
+	SigmaCorIn -= nvin; //reset natural position of Sigma correction input.
  	delete SigmaCorIn;
 
 	delete SuperG;
@@ -315,5 +337,6 @@ int main(int argc, char* argv[])
 	delete MatsuG0;
 	delete Epsilons;
 	delete inEpsilons;
+	
 	return 0;
 }

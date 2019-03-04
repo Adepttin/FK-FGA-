@@ -1,12 +1,12 @@
-// List of Routines which may be needed for more than one step of the 2-particle DF parquet
+// list of routines which may be needed for more than one step of the 2-particle DF parquet
 
 typedef complex<double> dcomp; //double precision complex type
 typedef double dflt;           //double precision float type
-const dcomp compli = dcomp(0.,1.);
-const double pi = 4. * atan(1.); // Pi
-const double hopt = -0.25; // hopping parameter t
+const dcomp compli = dcomp(0.,1.); //complex i
+const double pi = 4. * atan(1.); //pi
+const double hopt = -0.25; //hopping parameter t
 
-//Reading and writing binary data
+//reading binary data
 template <typename numbertype>
 int readbin (const char* filename , numbertype* const target , const int size )
 {
@@ -29,6 +29,7 @@ int readbin (const char* filename , numbertype* const target , const int size )
 	return(0);
 }
 
+//writing binary data
 template <typename numbertype>
 int writebin (const char* filename , numbertype* const source , const int size )
 {
@@ -51,9 +52,8 @@ int writebin (const char* filename , numbertype* const source , const int size )
 	return(0);
 }
 
-
-// Prepare Dispersion relation operator for nk*nk k-mesh
-// Nearest neighbour-hopping square lattice is hardcoded so far
+//prepare dispersion relation operator Ek for nk*nk k-mesh
+//nearest neighbour-hopping square lattice is hardcoded so far
 template <typename numbertype>
 int calcEk(const int nk, numbertype* const Ek)
 {
@@ -74,6 +74,37 @@ int calcEk(const int nk, numbertype* const Ek)
 	
 	return(0);
 }
+
+//calculate Green's function of real fermions, based on DF self energy corrections Sigmacor, DMFT self energy Sigma, dispersion relation epsilon, mu and beta 
+//lattice size nk and number of Matsubara frequencies as in DF calculation
+//result is written to Gk[v][kx][ky]
+template <typename numbertype , typename fltype >
+int calcGreal( const numbertype* const Sigmacor, const numbertype* const Sigma, const fltype* const epsilon, const int nv, const int nk, const fltype mu, const fltype beta, numbertype* const Gk)
+{
+	int i,j,k;
+	numbertype dummy;
+	numbertype* dummya;
+	const numbertype* dummyb;
+	
+	for(i = 0; i < nk; i++)
+	{
+		for(j = 0; j < nk; j++)
+		{
+			dummya = Gk + (nk*i+j)*2*nv;
+			dummyb = Sigmacor + (nk*i+j)*2*nv;
+			for(k = -nv; k < nv; k++)
+			{
+				dummy = compli*((2 * k + 1)*pi/beta) + mu - Sigma[k];
+				
+				
+				dummya[k] = 1./(dummy - dummyb[k] - epsilon[i*nk + j]);
+			}
+		}
+	}
+	
+	return(0);
+}
+
 // // calculate q-shifted sum over quadratic (2D) Brillouin zone of Gk and Gkp = sum (Gk(k1) * Gkp(k1 + q)) 
 // // calculation is carried out for (2*nv2 + boson) frequencies. Gk and Gkp have to be arranged as Gk[v1][kx][ky]
 // // Result is written to chi[v]
@@ -173,34 +204,6 @@ int calcEk(const int nk, numbertype* const Ek)
 // }
 // 
 // 
-// calculate real Green's function, based on available dispersion relation, DMFT-sigma, Dual self-energy corrections, mu and beta 
-// Result is written to Gk[v][kx][ky]
-template <typename numbertype , typename fltype >
-int calcGreal( const numbertype* const Sigmacor, const numbertype* const Sigma, const fltype* const epsilon, const int nv1, const int nk, const fltype mu, const fltype beta, numbertype* const Gk)
-{
-	int i,j,k;
-	numbertype dummy;
-	numbertype* dummya;
-	const numbertype* dummyb;
-	
-	for(i = 0; i < nk; i++)
-	{
-		for(j = 0; j < nk; j++)
-		{
-			dummya = Gk + (nk*i+j)*2*nv1;
-			dummyb = Sigmacor + (nk*i+j)*2*nv1;
-			for(k = -nv1; k < nv1; k++)
-			{
-				dummy = compli*((2 * k + 1)*pi/beta) + mu - Sigma[k];
-				
-				
-				dummya[k] = 1./(dummy - dummyb[k] - epsilon[i*nk + j]);
-			}
-		}
-	}
-	
-	return(0);
-}
 // 
 // 
 // // dress dual Green's function, Gk[v][kx][ky] by dual Self energy from files 
