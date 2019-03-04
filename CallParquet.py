@@ -1,5 +1,5 @@
 '''
-Runtrough of the DF parquet calculation for the FKM.
+DF parquet calculation for the FKM.
 Calls the C++ module SCDMFT.out doing a DMFT calculation first,
 followed by an iterative call of DFParquet.out containing the actual parquet implementation. 
 '''
