@@ -1,3 +1,9 @@
+"""
+Runtrough of the DF parquet calculation for the FKM.
+Calls the C++ module SCDMFT.out doing a DMFT calculation first,
+followed by an iterative call of DFParquet.out containing the actual parquet implementation. 
+"""
+
 import subprocess
 import numpy as np
 from shutil import copyfile
