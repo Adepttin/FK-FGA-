@@ -17,7 +17,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	//read in parameters
-	const double beta = atof(argv[1]); //inverse Temperature
+	const double beta = atof(argv[1]); //inverse temperature
 	const double U = atof(argv[2]); //interaction strength
 	double mu = atof(argv[3]); //chemical potential
 	const double t = 0.25; //hopping parameter
