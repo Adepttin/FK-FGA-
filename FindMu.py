@@ -4,53 +4,41 @@ from shutil import copyfile
 from routines import *
 
 '''
-Find mu so that occupation of mobile electrons is n=0.15
+Find chemical potential mu to fix wanted occupation of mobile electrons
 '''
 
+#inverste temperature
 beta = 10.
-#mu = -0.4
+#interaction strength
 U = 0.5
-Ef = 1.
+#occupation of localized f electrons
 p1 = 0.5
+#DF lattice size
 nk = 6
+#DMFT lattice size
 nkDMFT = 128
+#number of DF Matsubara frequencies
 nv = 20
-nvDMFT = 100 #200
+#number of DMFT Matsubara frequencies - take care to use enough!
+nvDMFT = 100
+#number of iterations in DMFT
 DMFTiter = 40
 
-dT = 0.005
-Tstart = 0.1
-NT = 21
+#wanted occupation of mobile electrons
+n = 0.15
 
-#Temperatures from 0.1 to 0.02
-Temperatures = [Tstart - dT*i for i in range(0,NT-1)]
-#Temperatures.append(0.0001)
+#search interval for mu
+mu_a = 0.
+mu_b = -1.
 
-#print(Temperatures)
+#call findMu
+mu, sigma, occupation = findMu(mu_a,mu_b,n,1e-5,beta,U,p1,nkDMFT,nk,nvDMFT,nv,DMFTiter)
 
-#calculating corresponding betas
-Betas = [1./T for T in Temperatures]
-
-#print(Betas)
-
-muList = np.zeros((len(Betas)),dtype=float)
-
-mu_a = 1.
-mu_b = -2.
-
-n=0.15
-
-
-for i in range(0,len(Betas)):
-
-	#for mu in muList:
-	mu, sigma, occupation = findMu(mu_a,mu_b,n,1e-5,Betas[i],U,Ef,p1,nkDMFT,nk,nvDMFT,nv,DMFTiter)
-
-	print(mu, sigma, occupation)
-	
-	muList[i] = mu
-	
-muList.tofile("Mu_U05")
+#print found mu and corresponding sigma (deviation from half filling) and occupation
+print("---------------------")
+print("Results:")
+print(mu, sigma, occupation)
+print("---------------------")
 
 	
 	
