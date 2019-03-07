@@ -6,23 +6,24 @@ class BubbleCurrent:
 	def __init__(self,nk,nv,beta,mu):
 		"""constructor"""
 		
-		self.nk = nk
-		self.nv = nv
-		self.beta = beta
-		self.mu = mu
+		#parameters
+		self.nk = nk #lattice size
+		self.nv = nv #number of Matsubara frequencies
+		self.beta = beta #inverse temperature
+		self.mu = mu #chemical potential
 		
 		#Matsubara frequencies
 		xF = np.arange(-nv,nv,1)
 		xB = np.arange(-nv,nv+1,1)
-		self.MatsusF = (2*xF+1)*np.pi/beta
-		self.MatsusB = (2*xB)*np.pi/beta
+		self.MatsusF = (2*xF+1)*np.pi/beta #fermionic
+		self.MatsusB = (2*xB)*np.pi/beta #bosonic
 		
 		#imaginary times
 		xTau = np.arange(0,nv+1,1)
 		self.Taus = beta*xTau/float(nv)
 		
-		#epsilon(k)
-		self.tt = 0.25
+		#dispersion relation epsilon(k)
+		self.tt = 0.25 #hopping parameter
 		ks = np.arange(-np.pi, np.pi, 2*np.pi/nk)
 		kx,ky = np.meshgrid(ks,ks)
 		self.Epsilon = -2*self.tt*(np.cos(kx) + np.cos(ky))
@@ -31,29 +32,34 @@ class BubbleCurrent:
 	def calcBubble(self,Gkv):
 		"""calculate Chi_jj bubble"""
 		
+		#Fourier transform Green's function to imaginary times
+		#G(k,nu) --> G(k,tau)
 		print("FoTo of Gkv to Gkt")
 		Gkt = self.FoToGkv(Gkv)
 		
+		#calculate bubble term in imaginary times
 		print("Calc Chit")
 		Chit = self.calcChit(Gkt)
 		
-		print("FoTo of Chit to Chiv") 
+		#Fourier transform bubble term back to Matsubara frequencies
+		#Chi(tau) --> Chi(omega)
+		print("FoTo of Chit to Chiw") 
 		Chiw = self.FoToChit(Chit)
 		
 		return Chiw
 		
 	def FoToGkv(self,Gkv):
-		"""fouriertransform Gkv to Gkt"""
+		"""Fourier transform Gkv to Gkt"""
 		
 		nk = self.nk
 		nv = self.nv
 		beta = self.beta
 		mu = self.mu
 		
-		#free G
+		#calculate free Green's function
 		G0 = self.calcFreeG()
 		
-		#difference of G_df and free G
+		#difference of DF G and free G
 		DiffG = Gkv - G0
 		
 		Gkt = np.zeros((nk,nk,nv+1),dtype=complex)
@@ -89,7 +95,7 @@ class BubbleCurrent:
 		return Chit
 	
 	def FoToChit(self,Chit):
-		"""fouriertransform Chi_jj to Matsubary frequencies"""
+		"""Fourier transform Chi_jj to Matsubary frequencies"""
 		
 		nv = self.nv
 		
