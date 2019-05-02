@@ -21,3 +21,10 @@ Routines that are used in **FindMu.py** and **CalcNewOcc.py** are written in the
 - **BubbleCurrent.py**
 
 The calculation of the bubble term in the parquet code suffers from an incorrect frequency asymptotic due to the frequency summation in a finite frequency box. To overcome this, the bubble term can be calculated anew using **CalcCurrentBubble.py** which includes the module in **BubbleCurrent.py**. Here, the bubble term is calculated after a Fourier transform of the DF Green's function to imaginary times instead on the Matsubara frequency axis.
+
+### Calculation of second order diagram to dual self-energy
+
+- **CallSecondOrder.py**
+- **SecondOrderFunctions.py**
+
+Python code to calculate the second order diagram to the dual self-energy, calculated in real space and then transformed back.
